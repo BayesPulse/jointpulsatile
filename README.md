@@ -1,1 +1,1 @@
-jointpulsatile
+This directory is initially a clone of the code made available with the paper in jointpulsatile_paper repo.  I will be using this directory to divide up the code into more workable chunks so we can merge it with other code development happening with the population model.
