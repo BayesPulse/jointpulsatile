@@ -36,8 +36,11 @@ typedef struct subject_tag {
     double width_sd;
     int pulse_count;
     
-    char *common;
-    char *pulse;
+    /*Question: should we have the data in this structure or just the parameters*/
+    /*Question: if no data should we also move the output files to the data structure*/
+
+    char *common; /*patient level output for baseline, half-life, mass_mean, width_mean*/
+    char *pulse; /*patient level output for pulse level chains, mass, width, locations */
     FILE *csub;
     FILE *psub;
 } PatientEstimates;
