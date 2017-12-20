@@ -74,7 +74,7 @@ typedef struct patient_tag {
     PatientData *patient_data;
     AssocEstimates *assoc_est;
     
-};
+} Patient;
 /*******the prior distribution is collasping all information of fsh and lh*******/
 
 typedef struct{
@@ -119,8 +119,8 @@ typedef struct {
     double alpha;  /* prior parameter in gamma for model error */
     double beta;
  
-    double Range_inter1; /*(hard core): range of interaction*/
-    double Range_inter2; /*strauss range of interactio*/
+    double strauss_range1; /*(hard core): range of interaction*/
+    double strauss_range2; /*strauss range of interactio*/
     double StraussRate; /*intensity function for strauss process: beta*/
     double StraussRepulsion; /*repulsion function for struass: gamma */
 
