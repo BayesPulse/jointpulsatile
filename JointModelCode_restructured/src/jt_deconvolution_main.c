@@ -105,15 +105,13 @@ int main(int argc,char *argv[])
     char patient_fnameroot[100];
     char pop_fnameroot[100];
     char assoc_fname[100];
-
-    double PopMeanMassPrior_input, PopMeanMassPriorVar_input, PulseMassSDMax_input, PatientMeanMassSDMax_input; //user inputs to define trigger prior info for population mean mass and corresponding SD's
-    double PopMeanWidthPrior_input, PopMeanWidthPriorVar_input, PulseWidthSDMax_input, PatientMeanWidthSDMax_input; //user inputs to define trigger prior info for population mean Width and corresponding SD's
-    double strauss_range1_input, strauss_range2_input, straussrate_input, straussrepulsion_input; //user inputs to define the prior on the trigger pulse locations
-    double PopMeanBasePrior_input, PopMeanBasePriorVar_input, PatientBaseSDMax_input; //user inputs to define trigger prior into for the popultion mean baseline and corresponding SD's
-    double PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input; //user inputs to define trigger prior into for the popultion mean halflife and corresponding SD's
-    double alpha_input, beta_input; //user inputs into the Gamma prior on the inverse of the model error for each subject
-
     
+    PopulationPriors *popprior, *popprior_response;  //Data structures that hold the population prior settings from the user for trigger and response, respectively
+  
+    void prior_initialize(char *argv[1],PopulationPriors *,PopulationPriors *);
+    void assocprior_initialize(char *argv[1], AssocPriors *)
+
+/***OLD CODE BELOW HERE
     char tmp[5];
   unsigned long *seed;
   double **ts_l,**ts_f,propvar[33] ,**temp2;
@@ -122,7 +120,7 @@ int main(int argc,char *argv[])
   double bprior1, bprior2, bprior3, bprior4, bprior5, bprior6;
   double hprior1, hprior2, hprior3,hprior4, hprior5, hprior6;
   double sprior1, sprior2,sprior3,sprior4;
-  /*int nprior1, nprior2;*/
+  int nprior1, nprior2;
   double gprior,betaprior;
   double rhoprior1,rhoprior2;
   double nuprior1,nuprior2;
@@ -154,7 +152,7 @@ int main(int argc,char *argv[])
 
 
 
-  Subject_type *initialize_subject(void);
+  Subject_type *initialize_subject(void); ***/
     
 /*This assesses if there is an input filename with the program call*/
 
@@ -178,9 +176,8 @@ int main(int argc,char *argv[])
 /*Open the input file and read in the information*/
     finput = fopen(argv[1],"r");
 
-    fscanf(finput,"%s %s \n", datafile, datafile_response);  /*First line: data for lh and fsh*/
+    fscanf(finput,"%s %s \n", datafile, datafile_response);  /*First line: datafile names for trigger and respones*/
     fscanf(finput,"%s %s %s %s \n", pulse_fnameroot, patient_fnameroot, pop_fnameroot, assoc_fname); /*second line: filename roots for the output files-pulse level, patient level, population level and association */
- 
     fscanf(finput,"%d %d \n", &Nsubj, &MCMCiter, &Nthin, &Nburnin);  /*third line: number of subject, number of iteration*/
 
 /* read in the hormonal time series */
@@ -191,99 +188,31 @@ int main(int argc,char *argv[])
     fitend = ts[*Nobs-1][0]+ ts[1][0] * 4;  /*search 2 units farther in time: these set the boundaries for looking for pulse locations.*/
     fitstart = -ts[1][0] * 4;  /*search 4 units in the past*/
 
+    fclose(finput);
 /**    mmm = 3;  Not needed in this program.  We don't use an order statistic for the trigger hormone pulse location model**/
     
-/*Set up prior structure for the population parameters*/
+/***initialize the population level prior information ***/
     
     popprior = (PopulationPriors *)calloc(1,sizeof(PopulationPriors));
     popprior_response = (PopulationPriors *)calloc(1,sizeof(PopulationPriors));
     
-/*Receive user input for the priors for the pulse masses (mean and variance of prior on mean and max on priors on SDs) and then set them in the Population Priors data structure*/
-    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanMassPrior_input, &PopMeanMassPriorVar_input, &PulseMassSDMax_input, &PatientMeanMassSDMax_input);
-    popprior->mass_mean = PopMeanMassPrior_input;
-    popprior->mass_variance = PopMeanMassPriorVar_input;
-    popprior->mass_mean_SD_max = PatientMeanMassSDMax_input;
-    popprior->mass_SD_max = PulseMassSDMax_input;
+    prior_initialize(argv[1],popprior,popprior_response);
+    
+/***initialize the association parameters priors ***/
+    assocprior = (AssocPriors *)calloc(1,sizeof(AssocPriors));
+    
+    assocprior_initialize(argv[1],assocprior);
     
     
-    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanMassPrior_input, &PopMeanMassPriorVar_input, &PulseMassSDMax_input, &PatientMeanMassSDMax_input);
-    popprior_response->mass_mean = PopMeanMassPrior_input;
-    popprior_response->mass_variance = PopMeanMassPriorVar_input;
-    popprior_response->mass_mean_SD_max = PatientMeanMassSDMax_input;
-    popprior_response->mass_SD_max = PulseMassSDMax_input;
+/***initialize the patient data structure ****/
     
+    patientlist = initialize_patient();
     
-/*Receive user input for the priors for the pulse widths (mean and variance of prior on mean and max on priors on SDs) and then set them in the Population Priors data structures */
-    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientWidthWidthSDMax_input);
-    popprior->width_mean = PopMeanWidthPrior_input;
-    popprior->width_variance = PopMeanWidthPriorVar_input;
-    popprior->width_mean_SD_max = PatientMeanWidthSDMax_input;
-    popprior->width_SD_max = PulseWidthSDMax_input;
+    patient_initialization(patientlist,Nsubj,MORE HERE);
     
-
-    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientMeanWdithSDMax_input);
-    popprior_response->width_mean = PopMeanWidthPrior_input;
-    popprior_response->width_variance = PopMeanWidthPriorVar_input;
-    popprior_response->width_mean_SD_max = PatientMeanWidthSDMax_input;
-    popprior_response->width_SD_max = PulseWidthSDMax_input;
-    
-/*Receive user input for the priors for the pulse locations of the trigger pulse location model*/
-    fscanf(finput, "%lf %lf %lf %lf\n", &strauss_range1_input, &strauss_range2_input, &straussrate_input, &straussrepulsion_input);
-    popprior->strauss_range1 = strauss_range1_input;
-    popprior->strauss_range2 = strauss_range2_input;
-    popprior->StraussRate = straussrate_input
-    popprior->StraussRepulsion = straussrepulsion_input;
-    
-    /*For good practice set response parameters to zero.  These parameters are not used for the response hormone*/
-    popprior_response->strauss_range1 = strauss_range1_input;
-    popprior_response->strauss_range2 = strauss_range2_input;
-    popprior_response->StraussRate = straussrate_input
-    popprior_response->StraussRepulsion = straussrepulsion_input;
-    
-    
-    
-/*Receive user input for the priors for baseline (mean and variance of prior on mean and max on priors on SD) and then set them in the Population Priors data structures */
-    fscanf(finput,"%lf %lf %lf\n",PopMeanBasePrior_input, PopMeanBasePriorVar_input, PatientBaseSDMax_input);
-    popprior->baseline_mean = PopMeanBasePrior_input;
-    popprior->baseline_variance = PopMeanBasePriorVar_input;
-    popprior->baseline_SD_max = PatientBaseSDMax_input;
-    
-    fscanf(finput,"%lf %lf %lf\n",PopMeanBasePrior_input, PopMeanBasePriorVar_input, PatientBaseSDMax_input);
-    popprior_response->baseline_mean = PopMeanBasePrior_input;
-    popprior_response->baseline_variance = PopMeanBasePriorVar_input;
-    popprior_response->baseline_SD_max = PatientBaseSDMax_input;
-
-
-/*Receive user input for the priors for half-life (mean and variance of prior on mean and max on priors on SD) and then set them in the Population Priors data structures */
-    fscanf(finput,"%lf %lf %lf\n",PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input);
-    popprior->HLline_mean = PopMeanHLPrior_input;
-    popprior->HLline_variance = PopMeanHLPriorVar_input;
-    popprior->HLline_SD_max = PatientHLSDMax_input;
-    
-    fscanf(finput,"%lf %lf %lf\n",PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input);
-    popprior_response->HLline_mean = PopMeanHLPrior_input;
-    popprior_response->HLline_variance = PopMeanHLPriorVar_input;
-    popprior_response->HLline_SD_max = PatientHLSDMax_input;
-   
-/*Receive user input for the priors for the model error and set them in the Popultion Priors data structures */
-    fscanf(finput,"%lf %lf\n",&alpha_input, &beta_input);
-    popprior->alpha = alpha_input;
-    popprior->beta = beta_input;
-    
-    fscanf(finput,"%lf %lf\n",&alpha_input, &beta_input);
-    popprior_response->alpha = alpha_input;
-    popprior_response->beta = beta_input;
-
-    
-
     
 
 
-    fscanf(finput,"%lf %lf %lf %lf\n", &mprior1, &mprior2, &mprior3, &mprior4); /*fourth line: lh pulse Width mean, fsh pulse mass mean, lh pulse width mean, fsh pulse width mean*/
-    hyper->hmean_l[0] = mprior1;
-    hyper->hmean_f[0] = mprior2;
-    hyper->hmean_l[1] = mprior3;
-    hyper->hmean_f[1] = mprior4;
 
 	fscanf(finput, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", &psprior1, &psprior2, &psprior3, &psprior4, &psprior5, &psprior6, &psprior7, &psprior8, &psprior9,&psprior10, &psprior11); /*5th line: first 3 is var-cor for pulse mass variance, 4-5 is for pulse width */
     

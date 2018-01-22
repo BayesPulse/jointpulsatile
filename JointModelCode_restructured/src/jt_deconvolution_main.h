@@ -8,6 +8,15 @@
 
 
 /*****This structure contains the information of each pulse********/
+typedef struct {
+    double prop_sd_time;
+    double prop_sd_mass;
+    double prop_sd_width;
+    double prop_sd_tscalemass;
+    double prop_sd_tscalewidth;
+    
+} PulseProposals;
+
 typedef struct node_tag{
 	struct node_tag *succ;
 	struct node_tag *pred;
@@ -19,6 +28,7 @@ typedef struct node_tag{
 	double *mean_contrib;
 	double lambda; /*for fsh pulse only, lambda, denomsum
 	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
+    PulseProposals *pulsepropsd;
 } PulseEstimate;
 
 /****This structure contains the patient level parameters***/
@@ -35,6 +45,14 @@ typedef struct {
     int pulse_count;
     
 } PatientEstimates;
+
+/****This structure contains the patient level proposal variances***/
+typedef struct {
+    double prop_sd_baseline;
+    double prop_sd_halflife;
+    double prop_sd_mass_mean;
+    double prop_sd_width_mean;
+} PatientProposals;
 
 typedef struct {
     
@@ -57,18 +75,6 @@ typedef struct {
 
 } PatientData;
 
-/****This structure contains the priors on the patient level info: population parameters***/
-typedef struct{
-    double cluster_size; /*cluster size (rho) in the cox process for the response hormone intensity*/
-    double log_cluster_size; /*log scale cluster size*/
-    double cluster_width; /*cluster width (nu) in the cox process for the respose hormone intensity*/
-    double log_cluster_width;
-    
-    char *popassoc_filename; /* output filename of the association parameters*/
-    FILE *popassocfile; /* file of the association parameters*/
-    
-} AssocEstimates;
-
 /****Thus structure contains the patient level data and parameters for both trigger and response hormones***/
 typedef struct patient_tag {
     struct patient_tag *succ;
@@ -76,10 +82,22 @@ typedef struct patient_tag {
     PatientEstimates *patient_estimates;
     PatientEstimates *resp_patient_estimates;
     PatientData *patient_data;
+    PatientProposals *patient_proposal;
     
 } Patient;
 
 /*******the population level parameters.  These are also in a Bayesian framework, priors on the patient level parameters*******/
+typedef struct {
+    double prop_sd_mass_mean;
+    double prop_sd_width_mean;
+    double prop_sd_baseline_mean;
+    double prop_sd_halflife_mean;
+    double prop_sd_mass_sd;
+    double prop_sd_width_sd;
+    double prop_sd_mass_mean_sd;
+    double prop_sd_width_mean_sd;
+} PopulationEstProposals;
+
 typedef struct{
     double baseline_mean;  /*theta_b*/
     double halflife_mean;  /*theta_h*/
@@ -104,6 +122,18 @@ typedef struct{
     
     
 } PopulationEstimates;
+
+/****This structure contains the priors on the patient level info: population parameters***/
+typedef struct{
+    double cluster_size; /*cluster size (rho) in the cox process for the response hormone intensity*/
+    double log_cluster_size; /*log scale cluster size*/
+    double cluster_width; /*cluster width (nu) in the cox process for the respose hormone intensity*/
+    double log_cluster_width;
+    
+    char *popassoc_filename; /* output filename of the association parameters*/
+    FILE *popassocfile; /* file of the association parameters*/
+    
+} AssocEstimates;
 
 /*The user defined values for the priors on the population level parameters*/
 /*This structure contains all the variables that the user sets when setting the priors*/
@@ -130,7 +160,7 @@ typedef struct {
     double halflife_mean;
     double halflife_variance;
     double halflife_SD_max;
-        
+    
     double alpha;  /* prior parameter in gamma for model error */
     double beta;
  
@@ -146,4 +176,6 @@ typedef struct{
 } AssocPriors;
 
 
-
+typedef struct{
+        put the proposal variances here.
+};
