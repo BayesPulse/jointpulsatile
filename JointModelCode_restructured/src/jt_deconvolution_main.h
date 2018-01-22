@@ -117,6 +117,11 @@ typedef struct {
     double width_variance;
     double width_SD_max;
     double width_mean_SD_max;
+    
+    double strauss_range1; /*(hard core): range of interaction*/
+    double strauss_range2; /*strauss range of interactio*/
+    double StraussRate; /*intensity function for strauss process: beta*/
+    double StraussRepulsion; /*repulsion function for struass: gamma */
 
     double baseline_mean;
     double baseline_variance;
@@ -125,15 +130,10 @@ typedef struct {
     double halflife_mean;
     double halflife_variance;
     double halflife_SD_max;
-    
-    
+        
     double alpha;  /* prior parameter in gamma for model error */
     double beta;
  
-    double strauss_range1; /*(hard core): range of interaction*/
-    double strauss_range2; /*strauss range of interactio*/
-    double StraussRate; /*intensity function for strauss process: beta*/
-    double StraussRepulsion; /*repulsion function for struass: gamma */
 
 } PopulationPriors;
 
