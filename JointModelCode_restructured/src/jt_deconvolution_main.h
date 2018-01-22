@@ -46,14 +46,14 @@ typedef struct {
     double avg_period_of_obs;  /**in minutes**/
     double duration_of_obs = number_of_obs * period_of_obs;  /**in minutes**/
     
-    char *common; /*patient level filename for output for baseline, half-life, mass_mean, width_mean*/
-    FILE *csub;   /*patient level file for baseline, half-life, mass_mean, width_mean*/
-    char *pulse; /*patient level filename for output for pulse level chains, mass, width, locations */
-    FILE *psub; /*patient level file for above*/
-    char *resp_common; /*response hormone filename for output for baseline, half-life, mass_mean, width_mean*/
-    FILE *resp_csub;  /*response hormone patient level file for output for baseline, half-life, mass_mean, etc*/
-    char *resp_pulse; /* resp hormone filename for pulse level output: mass, width, locations*/
-    FILE *resp_psub; /*resp hormone file for pulse level output*/
+    char *common_filename; /*patient level filename for output for baseline, half-life, mass_mean, width_mean*/
+    FILE *csubfile;   /*patient level file for baseline, half-life, mass_mean, width_mean*/
+    char *pulse_filename; /*patient level filename for output for pulse level chains, mass, width, locations */
+    FILE *psubfile; /*patient level file for above*/
+    char *resp_common_filename; /*response hormone filename for output for baseline, half-life, mass_mean, width_mean*/
+    FILE *resp_csub_filename;  /*response hormone patient level file for output for baseline, half-life, mass_mean, etc*/
+    char *resp_pulse_filename; /* resp hormone filename for pulse level output: mass, width, locations*/
+    FILE *resp_psub_filename; /*resp hormone file for pulse level output*/
 
 } PatientData;
 
@@ -63,6 +63,10 @@ typedef struct{
     double log_cluster_size; /*log scale cluster size*/
     double cluster_width; /*cluster width (nu) in the cox process for the respose hormone intensity*/
     double log_cluster_width;
+    
+    char *popassoc_filename; /* output filename of the association parameters*/
+    FILE *popassocfile; /* file of the association parameters*/
+    
 } AssocEstimates;
 
 /****Thus structure contains the patient level data and parameters for both trigger and response hormones***/
@@ -72,11 +76,10 @@ typedef struct patient_tag {
     PatientEstimates *patient_estimates;
     PatientEstimates *resp_patient_estimates;
     PatientData *patient_data;
-    AssocEstimates *assoc_est;
     
 } Patient;
-/*******the prior distribution is collasping all information of fsh and lh*******/
 
+/*******the population level parameters.  These are also in a Bayesian framework, priors on the patient level parameters*******/
 typedef struct{
     double baseline_mean;  /*theta_b*/
     double halflife_mean;  /*theta_h*/
@@ -91,15 +94,30 @@ typedef struct{
     double width_SD; /* population level pulse-to-pulse variation in pulse width*/
 
     double mass_mean_SD; /*patient-to-patient SD in mean pulse mass*/
-    double mass_mean_variance;
+    double mass_mean_variance; /**?  **/
 
     double width_mean_SD; /*patient-to-patient SD in mean pulse width*/
+    
+    
+    char *pop_filename; /*filename of output for population level parameters*/
+    FILE *popfile; /*The file containing the population level parameters*/
+    
     
 } PopulationEstimates;
 
 /*The user defined values for the priors on the population level parameters*/
 /*This structure contains all the variables that the user sets when setting the priors*/
 typedef struct {
+    double mass_mean;  // mean of the prior on the population mean pulse mass
+    double mass_variance; // variance of the prior on the population mean pulse mass
+    double mass_SD_max;  // maximum of the Unif distribution for the pulse-to-pulse SD of pulse masses within a patient
+    double mass_mean_SD_max; // maximum of the Unif distributio for the patient-to-patient SD of patient level mena pulse masses
+    
+    double width_mean;
+    double width_variance;
+    double width_SD_max;
+    double width_mean_SD_max;
+
     double baseline_mean;
     double baseline_variance;
     double baseline_SD_max;
@@ -108,13 +126,6 @@ typedef struct {
     double halflife_variance;
     double halflife_SD_max;
     
-    double mass_mean;
-    double mass_variance;
-    double mass_SD_max;
-    
-    double width_mean;
-    double width_variance;
-    double width_SD_max;
     
     double alpha;  /* prior parameter in gamma for model error */
     double beta;

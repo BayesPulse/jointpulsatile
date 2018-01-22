@@ -17,7 +17,7 @@
 *********************************************************************/
 
 double M;
-int mmm;
+//int mmm;
 double fitstart;
 double fitend;
 
@@ -41,67 +41,56 @@ double fitend;
 /********************************************************************/
 /*SUBROUTINES THAT EXIST IN THIS PROGRAM
 
- start_position: This subroutine initializes all the parameters in the study.
-    Initial baseline and halflife are user-inputted; all others are set in
-    the subroutine. This subroutine also creates our list of nodes and inserts
-    one new node with parameters equal to 0.
-    ARGUMENTS: Common_parms *parms; The values in this data structure are
-               modified in this routine;
-               double pmean; starting value for baseline inputted by user in
-               main; must be greater than 0
-               double pdelta; starting value for halflife inputted by user in
-               main; must be greater than 0
-    RETURNS: Node_type *list; returns the initialized node list
  **********************************************************************/
 
 /**********************************************************************
  MAIN PROGRAM STARTS HERE
 
  VARIABLE DEFINITIONS
-    i: generic counter
-    *N: number of observations in inputted file; determined by read_data_file
-        subroutine
-    iter: number of iterations to run the MCMC subroutine called in main;
-          this variable is inputted by the user
-    a: generic counter
-    *seed: 3 element vector with seed values for the random number generator;
-           read in from an external file
-    **ts: matrix containing column of time points and column of hormone
-          concentrations
-    **pmd_var: Variance-Covariance matrix of the proposal distribution of
-               baseline and halflife; matrix is defined in main
-    pmean: Starting value for baseline; inputted by the user
-    pdelta: Starting value for halflife; inputted by the user
-    *fseed: The pointer to the file that contains the random numbers for the
-            random number generator
-    *parms: Contains the parameters that are common throughout the model
-    *priors: Contains all parameters of the prior distributions used
-    *hyper: Contains all the hyperpriors (though this is not used)
-    *list: Contains the list of nodes and their characteristics
-
- SUBROUTINES USED
-    **read_data_file: Found in format_data.c; scans inputted data file and
-                      returns the matrix of data (time and concentration)
-    rnorm: Found in randgen.h; draws from the normal distribution
-    rgamma: Found in randgen.h; draws from the gamma distribution
-    destroy_list: Found in hash.h; frees all memory used by the nodes
-    mcmc: Found in linklistv2.c; This runs birth-death mcmc routine
-    *start_position: Found in this file; discussed above 
+    int *nobs: Number of observations for each subject
+    int MCMCiter: Number of MCMC interations to perform
+    int nsubj: Number of subjects in the analysis.  This is the number of columns in the dataset minus 2 (for obs number and time of observation).
+    int Nthin: how to thin the output to reduce file storage requirements and autocorrelation in the observations used to summarize the results.
+    int Nburnin: how much burnin prior to outputting the results.
+ 
+   
+    char datafile: Name of the rectangular file with the trigger hormone series.  One patient for each column.
+    char datafile_response: Name of the rectangular file with the response hormone series. One patient for each column. Columns must line up between the trigger and response.
+    char pulse_fnameroot: root of the filename for output for pulse specific parameters.
+    char patient_fnameroot: root of the filename for output for patient specific parameters.
+    char pop_fnameroot: root of the filename for output for population level parameters.
+    char assoc_fname: filename for output for parameters with the association components.
+ 
+    double PopMeanMassPrior_input: User defined mean in the prior on the population level mean pulse mass for the trigger hormone. On natural scale since using truncated normal distributions for this prior
+    double PopMeanMassPriorVar_input: User defined variance on the prior for the population level mean pulse mass for trigger hormone. 
+    double PulseMassSDMax_input: User defined maximum on the prior distribution for the pulse-to-pulse variation in the pulse masses of the trigger hormone. Pulse masses are on the natural scale.
+    double PatientMeanMassSDMax_input: User defined maximum on the maximum on the prior
+ 
  ************************************************************************/
 
 int main(int argc,char *argv[])
 {
-  int i,*N,iter,a,subj;
-  char datafile_l[90];
-  char datafile_f[100];
+    
+/*****************************************/
+/***Variable defining***/
+/*****************************************/
+    int *nobs,Nsubj, MCMCiter,Nthin, Nburnin;
+    
+    char datafile[90];
+    char datafile_response[100];
 
-  char commonf[100];
-    char commonl[100];
+    char pulse_fnameroot[100];
+    char patient_fnameroot[100];
+    char pop_fnameroot[100];
+    char assoc_fname[100];
 
-  char parml[100];
-    char parmf[100];
-
-  char tmp[5];
+    double PopMeanMassPrior_input, PopMeanMassPriorVar_input, PulseMassSDMax_input, PatientMeanMassSDMax_input; //user inputs to define trigger prior info for population mean mass and corresponding SD's
+    double RespPopMeanMassPrior_input, RespPopMeanMassPriorVar_input, RespPulseMassSDMax_input, RespPatientMeanMassSDMax_input; //user inputs to define response prior info for population mean mass and corresponding SD's
+    double PopMeanWidthPrior_input, PopMeanWidthPriorVar_input, PulseWidthSDMax_input, PatientMeanWidthSDMax_input; //user inputs to define trigger prior info for population mean Width and corresponding SD's
+    double RespPopMeanWidthPrior_input, RespPopMeanWidthPriorVar_input, RespPulseWidthSDMax_input, RespPatientMeanWidthSDMax_input; //user inputs to define response prior info for population mean Width and corresponding SD's
+    
+    
+    char tmp[5];
   unsigned long *seed;
   double **ts_l,**ts_f,propvar[33] ,**temp2;
  double mprior1, mprior2, mprior3, mprior4;
@@ -142,80 +131,64 @@ int main(int argc,char *argv[])
 
 
   Subject_type *initialize_subject(void);
+    
+/*This assesses if there is an input filename with the program call*/
 
-  if (argc != 2 ) exit(0);
+    if (argc != 2 ) {
+        printf("There is no inputfile given.\n");
+        exit(0);
+    }
 
 /************************************/
 /* M is used in the KISS random number generator */
     M = exp(-ENVIRONMENT*log(2.0));
 /*************************************************************/
     
-  for (a=0;a<1;a++) {
-  
+/*Read in the random number generator seed*/
+/*This might go away with R interface*/
     seed = (unsigned long *)calloc(3,sizeof(unsigned long));
     fseed = fopen("seed.dat","r");
     fscanf(fseed,"%lu %lu %lu\n",&seed[0],&seed[1],&seed[2]);
     fclose(fseed);
-    
+
+/*Open the input file and read in the information*/
     finput = fopen(argv[1],"r");
 
-    fscanf(finput,"%s %s \n", datafile_l, datafile_f);  /*First line: data for lh and fsh*/
-    fscanf(finput,"%s %s %s %s \n", commonl, commonf, parml,parmf); /*second line: output file name for result*/
-    fscanf(finput,"%d %d \n", &subj, &iter);  /*third line: number of subject, number of iteration*/
+    fscanf(finput,"%s %s \n", datafile, datafile_response);  /*First line: data for lh and fsh*/
+    fscanf(finput,"%s %s %s %s \n", pulse_fnameroot, patient_fnameroot, pop_fnameroot, assoc_fname); /*second line: filename roots for the output files-pulse level, patient level, population level and association */
+ 
+    fscanf(finput,"%d %d \n", &Nsubj, &MCMCiter, &Nthin, &Nburnin);  /*third line: number of subject, number of iteration*/
 
-    /* read in the hormonal time series */
-    N = (int *)calloc(1,sizeof(int));
-    ts_l = read_data_file(datafile_l,N,subj);
-	    ts_f = read_data_file(datafile_f,N,subj);
-
-    mmm = 3;
+/* read in the hormonal time series */
+    Nobs = (int *)calloc(1,sizeof(int)); // define a dynamic variable for the number of observations on a subject
     
-    /* perform the simulation */
+    ts = read_data_file(datafile,Nobs,nsubj); // time series of the trigger hormone concentration.
+    ts_response = read_data_file(datafile_response,Nobs,nsubj); //time series of the response hormone concentration.
+    fitend = ts[*Nobs-1][0]+ ts[1][0] * 4;  /*search 2 units farther in time: these set the boundaries for looking for pulse locations.*/
+    fitstart = -ts[1][0] * 4;  /*search 4 units in the past*/
+
+/**    mmm = 3;  Not needed in this program.  We don't use an order statistic for the trigger hormone pulse location model**/
     
-    parms_l = (Common_parms *)calloc(1,sizeof(Common_parms));
-	    parms_f = (Common_parms *)calloc(1,sizeof(Common_parms));
-    parms_l->re_precision = (double *)calloc(2,sizeof(double ));
-        parms_f->re_precision = (double *)calloc(2,sizeof(double ));
-
-
-
-    fitend = ts_l[*N-1][0]+ ts_l[1][0] * 4;  /*search 2 units farther in time*/
-    fitstart = -ts_l[1][0] * 4;  /*search 4 units in the past*/
-
-  
-
-
-  
-    priors = (Priors *)calloc(1,sizeof(Priors));
-    hyper = (Hyper_priors *)calloc(1,sizeof(Hyper_priors));
+/*Set up prior structure for the population parameters*/
     
-    priors->re_var_f = (double *)calloc(2,sizeof(double));
-    priors->re_var_l = (double *)calloc(2,sizeof(double));
-	
-	priors->fe_mean_f = (double *)calloc(2,sizeof(double));
-    priors->fe_mean_l = (double *)calloc(2,sizeof(double));
-
-    priors->fe_precision = (double **)calloc(2,sizeof(double *));
-    for (i=0;i<2;i++)
-    priors->fe_precision[i] = (double *)calloc(2,sizeof(double));
-
-	 priors->re_var = (double **)calloc(2,sizeof(double *));
-    for (i=0;i<2;i++)
-    priors->re_var[i] = (double *)calloc(2,sizeof(double));
+    popprior = (PopulationPriors *)calloc(1,sizeof(PopulationPriors));
+    popprior_response = (PopulationPriors *)calloc(1,sizeof(PopulationPriors));
     
-	hyper->prec = (double **)calloc(2,sizeof(double *));
-    for (i=0;i<2;i++)
-    hyper->prec[i] = (double *)calloc(2,sizeof(double));
-	hyper->sig_a_inv = (double **)calloc(2, sizeof(double *));
-	for (i = 0; i<2; i++)
-		hyper->sig_a_inv[i] = (double *)calloc(2, sizeof(double));
+/*Receive user input for the priors for the pulse masses */
 
-		temp2 = (double **)calloc(2,sizeof(double *));
-    for (i=0;i<2;i++)
-    temp2[i] = (double *)calloc(2,sizeof(double));
-	hyper->sig_a_inv[0][0] = 0.01;
-	hyper->sig_a_inv[1][1] = 0.01;
-	hyper->sig_a_inv[1][0] = hyper->sig_a_inv[1][0]= 0.0;
+    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanMassPrior_input, &PopMeanMassPriorVar_input, &PulseMassSDMax_input, &PatientMeanMassSDMax_input); //user inputs to define trigger prior info for population mean mass and corresponding SD's
+    
+    popprior->mass_mean = PopMeanMassPrior_input;
+    popprior->mass_variance = PopMeanMassPriorVar_input
+    fscanf(finput,"%lf %lf %lf %lf\n", &RespPopMeanMassPrior_input, &RespPopMeanMassPriorVar_input, &RespPulseMassSDMax_input, &RespPatientMeanMassSDMax_input); //user inputs to define response prior info for population mean mass and corresponding SD's
+
+/*Receive user input fror the priors for the pulse widths */
+    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientWidthMassSDMax_input); //user inputs to define trigger prior info for population mean mass and corresponding SD's
+    fscanf(finput,"%lf %lf %lf %lf\n", &RespPopMeanWidthPrior_input, &RespPopMeanWidthPriorVar_input, &RespPulseWidthSDMax_input, &RespPatientMeanWdithSDMax_input); //user inputs to define response prior info for population mean mass and corresponding SD's
+    
+
+   
+
 
     fscanf(finput,"%lf %lf %lf %lf\n", &mprior1, &mprior2, &mprior3, &mprior4); /*fourth line: lh pulse mass mean, fsh pulse mass mean, lh pulse width mean, fsh pulse width mean*/
     hyper->hmean_l[0] = mprior1;
@@ -454,7 +427,7 @@ int main(int argc,char *argv[])
 	free(parms_f);
 	free(temp2);
 /************************/
-  }
+
   return 0;
 }
 
