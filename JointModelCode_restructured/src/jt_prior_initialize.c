@@ -50,13 +50,15 @@
  double PatientHLSDMax_input: User defined maximum on the SD in the Unif prior on the patient-to-patient variance in half-life
  
  double alpha_input: User defined input in into the Gamma for the inverse of the model error variance for each subject
- dobule beta_input: User defined input into the Gamma prior for the invese of the model error variance for each subject
+ double beta_input: User defined input into the Gamma prior for the invese of the model error variance for each subject
+ double temp: throw away variable for reading in lines we don't use.
+ 
  
  
  ************************************************************************/
 
 
-void prior_initialize(File *finput,PopulationPriors *popprior,PopulationPriors *popprior_response) {
+void prior_initialize(char *finputname,PopulationPriors *popprior,PopulationPriors *popprior_response) {
     
 /*****************************************/
 /***Variable defining***/
@@ -67,7 +69,18 @@ void prior_initialize(File *finput,PopulationPriors *popprior,PopulationPriors *
     double PopMeanBasePrior_input, PopMeanBasePriorVar_input, PatientBaseSDMax_input; //user inputs to define trigger prior into for the popultion mean baseline and corresponding SD's
     double PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input; //user inputs to define trigger prior into for the popultion mean halflife and corresponding SD's
     double alpha_input, beta_input; //user inputs into the Gamma prior on the inverse of the model error for each subject
+    double temp;
+    int tempint;
+    
+    FILE *finput;  //file for the input parameters
+    
 
+    finput = fopen(finputname,"r");
+    
+//read first 3 lines and toss the info
+    fscanf(finput,"%s %s \n", temp, temp);  /*First line: datafile names for trigger and respones*/
+    fscanf(finput,"%s %s %s %s \n", temp, temp, temp, temp); /*second line: filename roots for the output files-pulse level, patient level, population level and association */
+    fscanf(finput,"%d %d %d %d\n", tempint, tempint, tempint, tempint);  /*third line: number of subject, number of iteration*/
     
 /*Receive user input for the priors for the pulse masses (mean and variance of prior on mean and max on priors on SDs) and then set them in the Population Priors data structure*/
     fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanMassPrior_input, &PopMeanMassPriorVar_input, &PulseMassSDMax_input, &PatientMeanMassSDMax_input);
@@ -145,4 +158,5 @@ void prior_initialize(File *finput,PopulationPriors *popprior,PopulationPriors *
     popprior_response->alpha = alpha_input;
     popprior_response->beta = beta_input;
     
+    fclose(finput);
 }
