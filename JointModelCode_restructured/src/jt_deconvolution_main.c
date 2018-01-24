@@ -87,6 +87,15 @@ double fitend;
     double alpha_input: User defined input in into the Gamma for the inverse of the model error variance for each subject
     double beta_input: User defined input into the Gamma prior for the invese of the model error variance for each subject
  
+ ***cox process/association parameters****
+    double mean_cluster_input: mean on the prior of the cluster size.  On log scale.
+    double var_cluster_input: variance on the prior of the cluster size. On log scale squared.
+    double mean_clusterwidth_input: mean on the prior of the cluster width. on log scale.
+    double var_clusterwidth_input: variance on the prior of the cluster width. on log scale.
+ double mass_corr_beta_mean_input: mean of the beta prior on the correlation of the pulse masses.
+ double mass_corr_beta_var_input: variance of the beta prior on the correlation of the pulse masses.
+ double corr_prior_alpha: alpha parameter in the beta prior on the correlation.
+ double corr_prior_beta: beta parameter in the beta prior on the correlation.
  
  ************************************************************************/
 
@@ -115,7 +124,9 @@ int main(int argc,char *argv[])
     double PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input; //user inputs to define trigger prior into for the popultion mean halflife and corresponding SD's
     double alpha_input, beta_input; //user inputs into the Gamma prior on the inverse of the model error for each subject
     
-  
+    double mean_cluster_input, var_cluster_input; //user inputs for mean and variance on the cluster size
+    double mean_clusterwidth_input, var_clusterwidth_input; //user inputs for mean and variance on the cluster width
+    double mass_corr_beta_mean_input, mass_corr_beta_var_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
 
 /***OLD CODE BELOW HERE
     char tmp[5];
@@ -197,6 +208,10 @@ int main(int argc,char *argv[])
 /**    mmm = 3;  Not needed in this program.  We don't use an order statistic for the trigger hormone pulse location model**/
     
     /*Receive user input for the priors for the pulse masses (mean and variance of prior on mean and max on priors on SDs) and then set them in the Population Priors data structure*/
+    
+    popprior = calloc(1,sizeof(PopulationPriors));
+    popprior_response = calloc(1,sizeof(PopulationPriors));
+    
     fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanMassPrior_input, &PopMeanMassPriorVar_input, &PulseMassSDMax_input, &PatientMeanMassSDMax_input);
     popprior->mass_mean = PopMeanMassPrior_input;
     popprior->mass_variance = PopMeanMassPriorVar_input;
@@ -273,7 +288,25 @@ int main(int argc,char *argv[])
     popprior_response->beta = beta_input;
     
     
-/***STOPPED HERE***/
+/**READ IN THE ASSOCIATION PARAMETERS ***/
+    
+    assocprior = calloc(1,sizeof(AssocPriors));
+    
+    fscanf(finput,"%lf %lf\n",&mean_cluster_input, &var_cluster_input);
+    fscanf(finput,"%lf %lf\n",&mean_clusterwidth_input, &var_clusterwidth_input);
+    fscanf(finput,"%lf %lf\n",&mass_corr_beta_mean_input, &mass_corr_beta_var_input);
+    
+    assocprior->mean_log_cluster_size = mean_cluster_input;
+    assocprior->variance_log_cluster_size = var_cluster_input;
+    assocprior->mean_log_cluster_width = mean_clusterwidth_input;
+    assocprior->variance_log_cluster_width = var_clusterwidth_input;
+    /**ADD IN THE TRANSFORM OF THE MEAN/VAR TO ALPHA/BETA IN THE BETA DISTRIBUTION**/
+    assocprior->corr_alpha = FUNCTION NEEDED;
+    associprior->corr_beta = FUNCTION NEEDED;
+    
+/**Read in the subject level info and create subject level info**/
+    
+    
     /*READ IN THE ASSOCIATION PARAMETERS AND THEN DO THE SUBJECTS READ IN***/
 
 

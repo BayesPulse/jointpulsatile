@@ -9,11 +9,11 @@
 
 /*****This structure contains the information of each pulse********/
 typedef struct {
-    double prop_sd_time;
-    double prop_sd_mass;
-    double prop_sd_width;
-    double prop_sd_tscalemass;
-    double prop_sd_tscalewidth;
+    double pv_time;
+    double pv_mass;
+    double pv_width;
+    double pv_tscalemass;
+    double pv_tscalewidth;
     
 } PulseProposals;
 
@@ -28,7 +28,7 @@ typedef struct node_tag{
 	double *mean_contrib;
 	double lambda; /*for fsh pulse only, lambda, denomsum
 	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
-    PulseProposals *pulsepropsd;
+    PulseProposals *pulsepv;
 } PulseEstimate;
 
 /****This structure contains the patient level parameters***/
@@ -48,10 +48,10 @@ typedef struct {
 
 /****This structure contains the patient level proposal variances***/
 typedef struct {
-    double prop_sd_baseline;
-    double prop_sd_halflife;
-    double prop_sd_mass_mean;
-    double prop_sd_width_mean;
+    double pv_baseline;
+    double pv_halflife;
+    double pv_mass_mean;
+    double pv_width_mean;
 } PatientProposals;
 
 typedef struct {
@@ -82,21 +82,24 @@ typedef struct patient_tag {
     PatientEstimates *patient_estimates;
     PatientEstimates *resp_patient_estimates;
     PatientData *patient_data;
-    PatientProposals *patient_proposal;
+    PatientProposals *patient_pv;
     
 } Patient;
 
 /*******the population level parameters.  These are also in a Bayesian framework, priors on the patient level parameters*******/
 typedef struct {
-    double prop_sd_mass_mean;
-    double prop_sd_width_mean;
-    double prop_sd_baseline_mean;
-    double prop_sd_halflife_mean;
-    double prop_sd_mass_sd;
-    double prop_sd_width_sd;
-    double prop_sd_mass_mean_sd;
-    double prop_sd_width_mean_sd;
-} PopulationEstProposals;
+    double pv_baseline_mean;
+    double pv_HL_mean;
+    double pv_baseline_variance;
+    double pv_HL_variance;
+    double pv_mass_mean;
+    double pv_width_mean;
+    double pv_mass_SD;
+    double pv_width_SD;
+    double pv_mass_mean_SD;
+    double pv_width_mean_SD;
+} PopulationProposal;
+
 
 typedef struct{
     double baseline_mean;  /*theta_b*/
@@ -116,12 +119,18 @@ typedef struct{
 
     double width_mean_SD; /*patient-to-patient SD in mean pulse width*/
     
-    
+    PopulationProposal *pv_population;
     char *pop_filename; /*filename of output for population level parameters*/
     FILE *popfile; /*The file containing the population level parameters*/
     
     
 } PopulationEstimates;
+
+typedef struct{
+    double pv_clustersize;
+    double pv_clusterwidth;
+    double pv_masscorr;
+} AssocProposals;
 
 /****This structure contains the priors on the patient level info: population parameters***/
 typedef struct{
@@ -129,6 +138,8 @@ typedef struct{
     double log_cluster_size; /*log scale cluster size*/
     double cluster_width; /*cluster width (nu) in the cox process for the respose hormone intensity*/
     double log_cluster_width;
+    
+    AssocProposals *pv_assoc;
     
     char *popassoc_filename; /* output filename of the association parameters*/
     FILE *popassocfile; /* file of the association parameters*/
@@ -173,9 +184,9 @@ typedef struct{
     double variance_log_cluster_size; /*variance in prior on the cluster size*/
     double mean_log_cluster_width; /*mean on prior of cluster width (nu) in the cox process for the respose hormone intensity*/
     double variance_log_cluster_width; /*variance in prior on the cluster width*/
+    double corr_alpha;  /*alpha parameter in the beta prior on the correlation between the pulse masses*/
+    double corr_beta;   /*beta parameter in the beta prior on the correlation between the pulse masses*/
 } AssocPriors;
 
 
-typedef struct{
-        put the proposal variances here.
-};
+
