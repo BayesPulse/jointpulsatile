@@ -105,8 +105,8 @@ typedef struct{
     double baseline_mean;  /*theta_b*/
     double halflife_mean;  /*theta_h*/
     
-    double baseline_variance;  /*patient to patient variation of baselines*/
-    double halflife_variance;  /*patient to patient variation of half-lifes*/
+    double baseline_SD;  /*patient to patient variation of baselines*/
+    double halflife_SD;  /*patient to patient variation of half-lifes*/
     
 	double mass_mean;     /*population mean mass: mean of the patient level means*/
     double width_mean;    /*population mean width: mean of the patient level means*/
@@ -115,11 +115,8 @@ typedef struct{
     double width_SD; /* population level pulse-to-pulse variation in pulse width*/
 
     double mass_mean_SD; /*patient-to-patient SD in mean pulse mass*/
-    double mass_mean_variance; /**?  **/
-
     double width_mean_SD; /*patient-to-patient SD in mean pulse width*/
     
-    PopulationProposal *pv_population;
     char *pop_filename; /*filename of output for population level parameters*/
     FILE *popfile; /*The file containing the population level parameters*/
     
