@@ -122,6 +122,8 @@ double fitend;
  double sv_cluster_input:
  double sv_width_input:
  double sv_mass_corr_input:
+ 
+ double pv_time_input,pv_mass_input,pv_width_input,pv_tscalemass_input, pv_tscalewidth_input;
 ************************************************************************/
 
 int main(int argc,char *argv[])
@@ -173,7 +175,9 @@ int main(int argc,char *argv[])
     double pv_pt_mass_input,pv_pt_width_input,pv_pt_base_input,pv_pt_hl_input;
     double sv_ptmassresp_input,sv_ptwidthresp_input,sv_ptbaseresp_input,sv_pthlresp_input,sv_pt_respmodelerrorvar;
     double pv_pt_massresp_input,pv_pt_widthresp_input,pv_pt_baseresp_input,pv_pt_hlresp_input;
-
+    
+    double pv_time_input,pv_mass_input,pv_width_input,pv_tscalemass_input, pv_tscalewidth_input; //user input for starting values of the proposal variance for the individual pulses.
+    double pv_resptime_input,pv_respmass_input,pv_respwidth_input,pv_resptscalemass_input, pv_resptscalewidth_input; //user input for starting values of the proposal variance for the individual resp pulses.
     
 /*This assesses if there is an input filename with the program call*/
 
@@ -386,9 +390,12 @@ int main(int argc,char *argv[])
     
     fscanf(finput,"%lf %lf %lf %lf %lf\n",sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar);
     fscanf(finput "%lf %lf %lf %lf\n",pv_pt_mass_input,pv_pt_width_input,pv_pt_base_input,pv_pt_hl_input);
+    fscanf(finput "%lf %lf %lf %lf %lf\n",pv_time_input,pv_mass_input,pv_width_input,pv_tscalemass_input, pv_tscalewidth_input);
     
     fscanf(finput,"%lf %lf %lf %lf %lf\n",sv_ptmassresp_input,sv_ptwidthresp_input,sv_ptbaseresp_input,sv_pthlresp_input,sv_pt_respmodelerrorvar);
     fscanf(finput "%lf %lf %lf %lf\n",pv_pt_massresp_input,pv_pt_widthresp_input,pv_pt_baseresp_input,pv_pt_hlresp_input);
+    fscanf(finput "%lf %lf %lf %lf %lf\n",pv_resptime_input,pv_respmass_input,pv_respwidth_input,pv_resptscalemass_input, pv_resptscalewidth_input);
+    
     patientlist = initialize_subject();
     
     i=0;
@@ -409,8 +416,15 @@ int main(int argc,char *argv[])
         strcat(patient->patient_data->resp_common_filename,"_ptparms_resp");
         strcat(patient->patient_data->resp_common_filename,".out");
 
+        sprintf(patientnumb,"%d",Nsubj-i);
+        
+        strcpy(subject->common_l,commonl);
+        strcat(subject->common_l,"s");
+        strcat(subject->common_l,tmp);
+        strcat(subject->common_l,".out");
         strcpy(patient->patient_data->pulse_filename,fnameroot);
         strcat(patient->patient_data->pulse_filename,"_pulse_trig");
+        strcat(patient->patient_data->pulse_filename,patientnumb);
         strcat(patient->patient_data->pulse_filename,".out");
         
         strcpy(patient->patient_data->resp_pulse_filename,fnameroot);
@@ -453,6 +467,19 @@ int main(int argc,char *argv[])
         patient->resp_patient_pv->pv_width_mean = pv_pt_widthresp_input;
         patient->resp_patient_pv->pv_baseline = pv_pt_baseresp_input;
         patient->resp_patient_pv->pv_halflife = pv_pt_hlresp_input;
+        
+        //set initial proposal variances for pulse parameters
+        patient->pulse_pv->pv_time = pv_time_input;
+        patient->pulse_pv->pv_mass = pv_mass_input;
+        patient->pulse_pv->pv_width = pv_width_input;
+        patient->pulse_pv->pv_tscalemass = pv_tscalemass_input;
+        patient->pulse_pv->pv_tscalewidth = pv_tscalewidth_input;
+        
+        patient->pulse_pv_response->pv_time = pv_resptime_input;
+        patient->pulse_pv_response->pv_mass = pv_respmass_input;
+        patient->pulse_pv_response->pv_width = pv_respwidth_input;
+        patient->pulse_pv_response->pv_tscalemass = pv_resptscalemass_input;
+        patient->pulse_pv_response->pv_tscalewidth = pv_resptscalewidth_input;
         
         insert_subject(patient,patientlist);
     }

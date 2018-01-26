@@ -11,12 +11,12 @@
 typedef struct node_tag{
 	struct node_tag *succ;
 	struct node_tag *pred;
-	double time;  /*tau_ki*/
-	double mass;  /*theta^s_ki*/
-    double width; /*theta^w_ki*/
+	double time;  /*pulse location in minutes*/
+	double mass;  /*pulse mass on natural scale*/
+    double width; /*pulse width: variance of the normal distribution of the pulse shape*/
     double tvarscalemass;  /*variance scale for mass t-dist*/
     double tvarscalewidth;   /*variance scal for width t-dist*/
-	double *mean_contrib;
+	double *mean_contrib; /*pulse level contribution to the integral of mean concentration
 	double lambda; /*for fsh pulse only, lambda, denomsum
 	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
 } PulseEstimate;
@@ -67,9 +67,9 @@ typedef struct {
     char *pulse_filename; /*patient level filename for output for pulse level chains, mass, width, locations */
     FILE *psubfile; /*patient level file for above*/
     char *resp_common_filename; /*response hormone filename for output for baseline, half-life, mass_mean, width_mean*/
-    FILE *resp_csub_filename;  /*response hormone patient level file for output for baseline, half-life, mass_mean, etc*/
+    FILE *resp_csub_file;  /*response hormone patient level file for output for baseline, half-life, mass_mean, etc*/
     char *resp_pulse_filename; /* resp hormone filename for pulse level output: mass, width, locations*/
-    FILE *resp_psub_filename; /*resp hormone file for pulse level output*/
+    FILE *resp_psub_file; /*resp hormone file for pulse level output*/
 
 } PatientData;
 

@@ -77,6 +77,8 @@ Patient *initialize_subject(void)
     s->patient_data = calloc(1,sizeof(PatientData));
     s->patient_pv = calloc(1,sizeof(PatientProposals));
     s->patient_pv_response = calloc(1,sizeof(PatientProposals));
+    s->pulse_pv = calloc(1,sizeof(PulseProposals));
+    s->pulse_pv_response = calloc(1,sizeof(PulseProposals));
     
   return s;
 }
