@@ -56,10 +56,7 @@ double fitend;
    
     char datafile: Name of the rectangular file with the trigger hormone series.  One patient for each column.
     char datafile_response: Name of the rectangular file with the response hormone series. One patient for each column. Columns must line up between the trigger and response.
-    char pulse_fnameroot: root of the filename for output for pulse specific parameters.
-    char patient_fnameroot: root of the filename for output for patient specific parameters.
-    char pop_fnameroot: root of the filename for output for population level parameters.
-    char assoc_fname: filename for output for parameters with the association components.
+    char fnameroot: root of the filename for output.
  
     double PopMeanMassPrior_input: User defined mean in the prior on the population level mean pulse mass for the hormone. On natural scale since using truncated normal distributions for this prior
     double PopMeanMassPriorVar_input: User defined variance on the prior for the population level mean pulse mass for hormone.
@@ -97,6 +94,22 @@ double fitend;
  double corr_prior_alpha: alpha parameter in the beta prior on the correlation.
  double corr_prior_beta: beta parameter in the beta prior on the correlation.
  
+ ***Parameters at population level and starting values****
+   double svmean, svptsd, svsd;
+ PopulationEstimates popparms: population level parameter values for trigger.
+ PopulationEstimates popparms_response: population level parameter values for response.
+ double sv_ptmass_input:
+ double sv_ptwidth_input:
+ double sv_ptbase_input:
+ double sv_pthl_input:
+ double sv_pt_modelerrorvar:
+ double pv_pt_mass_input:
+ double pv_pt_width_input:
+ double pv_pt_base_input:
+ double pv_pt_hl_input:
+ 
+ 
+ 
  ************************************************************************/
 
 int main(int argc,char *argv[])
@@ -105,15 +118,12 @@ int main(int argc,char *argv[])
 /*****************************************/
 /***Variable defining***/
 /*****************************************/
-    int *nobs,Nsubj, MCMCiter,Nthin, Nburnin;
+    int *nobs,Nsubj, MCMCiter,Nthin, Nburnin, i;
     
     char datafile[90];
     char datafile_response[100];
 
-    char pulse_fnameroot[100];
-    char patient_fnameroot[100];
-    char pop_fnameroot[100];
-    char assoc_fname[100];
+    char fnameroot[100];
     
     PopulationPriors *popprior, *popprior_response;  //Data structures that hold the population prior settings from the user for trigger and response, respectively
   
@@ -127,10 +137,20 @@ int main(int argc,char *argv[])
     double mean_cluster_input, var_cluster_input; //user inputs for mean and variance on the cluster size
     double mean_clusterwidth_input, var_clusterwidth_input; //user inputs for mean and variance on the cluster width
     double mass_corr_beta_mean_input, mass_corr_beta_var_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
-
+    double svmean, svptsd, svsd; //user inputs for starting values of population level parameters
+    
     PopulationPriors *popprior;
+    PopulationPriors *popprior_response;
     AssocPriors *assocprior;
-    PopulationPriors *popprior;s
+    
+    PopulationEstimates *popparms;
+    PopulationEstimates *popparms_response;
+    
+    Patient *patientlist, *patient;
+    double sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar;
+    double pv_pt_mass_input,pv_pt_width_input,pv_pt_base_input,pv_pt_hl_input;
+    double sv_ptmassresp_input,sv_ptwidthresp_input,sv_ptbaseresp_input,sv_pthlresp_input,sv_pt_respmodelerrorvar;
+    double pv_pt_massresp_input,pv_pt_widthresp_input,pv_pt_baseresp_input,pv_pt_hlresp_input;
     
 /***OLD CODE BELOW HERE
     char tmp[5];
@@ -197,8 +217,7 @@ int main(int argc,char *argv[])
 /*Open the input file and read in the information*/
     finput = fopen(argv[1],"r");
 
-    fscanf(finput,"%s %s \n", datafile, datafile_response);  /*First line: datafile names for trigger and respones*/
-    fscanf(finput,"%s %s %s %s \n", pulse_fnameroot, patient_fnameroot, pop_fnameroot, assoc_fname); /*second line: filename roots for the output files-pulse level, patient level, population level and association */
+    fscanf(finput,"%s %s %s\n", datafile, datafile_response, fnameroot);  /*First line: datafile names for trigger and respones*/
     fscanf(finput,"%d %d %d %d\n", &Nsubj, &MCMCiter, &Nthin, &Nburnin);  /*third line: number of subject, number of iteration*/
 
 /* read in the hormonal time series */
@@ -249,14 +268,14 @@ int main(int argc,char *argv[])
     fscanf(finput, "%lf %lf %lf %lf\n", &strauss_range1_input, &strauss_range2_input, &straussrate_input, &straussrepulsion_input);
     popprior->strauss_range1 = strauss_range1_input;
     popprior->strauss_range2 = strauss_range2_input;
-    popprior->StraussRate = straussrate_input
+    popprior->StraussRate = straussrate_input;
     popprior->StraussRepulsion = straussrepulsion_input;
     
 /*For good practice set response parameters to zero.  These parameters are not used for the response hormone*/
-    popprior_response->strauss_range1 = strauss_range1_input;
-    popprior_response->strauss_range2 = strauss_range2_input;
-    popprior_response->StraussRate = straussrate_input
-    popprior_response->StraussRepulsion = straussrepulsion_input;
+    popprior_response->strauss_range1 = 0;
+    popprior_response->strauss_range2 = 0;
+    popprior_response->StraussRate = 0;
+    popprior_response->StraussRepulsion = 0;
     
     
 /*Receive user input for the priors for baseline (mean and variance of prior on mean and max on priors on SD) and then set them in the Population Priors data structures */
@@ -298,32 +317,142 @@ int main(int argc,char *argv[])
     
     fscanf(finput,"%lf %lf\n",&mean_cluster_input, &var_cluster_input);
     fscanf(finput,"%lf %lf\n",&mean_clusterwidth_input, &var_clusterwidth_input);
-    fscanf(finput,"%lf %lf\n",&mass_corr_beta_mean_input, &mass_corr_beta_var_input);
+    fscanf(finput,"%lf %lf\n",&mass_corr_alpha_input, &mass_corr_beta_input);
     
     assocprior->mean_log_cluster_size = mean_cluster_input;
     assocprior->variance_log_cluster_size = var_cluster_input;
     assocprior->mean_log_cluster_width = mean_clusterwidth_input;
     assocprior->variance_log_cluster_width = var_clusterwidth_input;
-    /**ADD IN THE TRANSFORM OF THE MEAN/VAR TO ALPHA/BETA IN THE BETA DISTRIBUTION**/
-    assocprior->corr_alpha = FUNCTION NEEDED;
-    associprior->corr_beta = FUNCTION NEEDED;
+    assocprior->corr_alpha = mass_corr_alpha_input;
+    associprior->corr_beta = mass_corr_beta_input;
     
 /**Read in the starting values for population parameters**/
     
     popparms = calloc(1,sizeof(PopulationPriors));
     popparms_response = calloc(1,sizeof(PopulationPriors));
     
-    fscanf(finput,"%lf %lf %lf\n",svmassmean,svptsd,svsd);
+    fscanf(finput,"%lf %lf %lf\n",&svmean,&svptsd,&svsd); // read in the mass starting values
+    popparms->mass_mean = svmean;
+    popparms->mass_SD = svptsd;
+    popparms->mass_mean_SD = svsd;
     
+    fscanf(finput,"%lf %lf %lf\n",&svmean,&svptsd,&svsd); // read in the mass starting values for the response
+    popparms_response->mass_mean = svmean;
+    popparms_response->mass_SD = svptsd;
+    popparms_response->mass_mean_SD = svsd;
     
-    /*READ IN THE ASSOCIATION PARAMETERS AND THEN DO THE SUBJECTS READ IN***/
+    fscanf(finput,"%lf %lf %lf\n",&svmean,&svptsd,&svsd); // read in the width starting values
+    popparms->width_mean = svmean;
+    popparms->width_SD = svptsd;
+    popparms->width_mean_SD = svsd;
+    
+    fscanf(finput,"%lf %lf %lf\n",&svmean,&svptsd,&svsd); // read in the width starting values for the response
+    popparms_response->width_mean = svmean;
+    popparms_response->width_SD = svptsd;
+    popparms_response->width_mean_SD = svsd;
+    
+    fscanf(finput,"%lf %lf\n",&svmean,&svsd); //read in the baseline starting values
+    popparms->baseline_mean = svmean;
+    popparms->baseline_SD = svsd;
+    
+    fscanf(finput,"%lf %lf\n",&svmean,&svsd); // read in the baseline starting values for the response
+    popparms_response->baseline_mean = svmean;
+    popparms_response->baseline_SD = svsd;
+    
+    fscanf(finput,"%lf %lf\n",&svmean,&svsd); //read in the half-life starting values
+    popparms->halflife_mean = svmean;
+    popparms->halflife_SD = svsd;
+    
+    fscanf(finput,"%lf %lf\n",&svmean,&svsd); // read in the half-life starting values for the response
+    popparms_response->halflife_mean = svmean;
+    popparms_response->halflife_SD = svsd;
+    
+    //name the output file for trigger
+    strcpy(popparms->pop_filename,fnameroot);
+    strcat(popparms->pop_filename,"_pop_trig.out");
+    popparms->popfile = fopen(popparms->pop_filename,"w");
+    //name the output file for response
+    strcpy(popparms_response->pop_filename,fnameroot);
+    strcat(popparms_response->pop_filename,"_pop_resp.out");
+    popparms_response->popfile = fopen(popparms_response->pop_filename,"w");
 
+/**Read in the starting values for patient level parameters**/
+    //we need to create the patient level data info
+    //we need to create the patient level estimates for trigger and response
+    
+    fscanf(finput,"%lf %lf %lf %lf %lf\n",sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar);
+    fscanf(finput "%lf %lf %lf %lf\n",pv_pt_mass_input,pv_pt_width_input,pv_pt_base_input,pv_pt_hl_input);
+    
+    fscanf(finput,"%lf %lf %lf %lf %lf\n",sv_ptmassresp_input,sv_ptwidthresp_input,sv_ptbaseresp_input,sv_pthlresp_input,sv_pt_respmodelerrorvar);
+    fscanf(finput "%lf %lf %lf %lf\n",pv_pt_massresp_input,pv_pt_widthresp_input,pv_pt_baseresp_input,pv_pt_hlresp_input);
+    patientlist = initialize_subject();
+    
+    i=0;
+    for (i=0;i<Nsubj;i++) {
+        patient=initialize_subject();
+        
+        //fill patient data: create filenames, set data
+        patient->patient_data->common_filename = (char *)calloc(40,sizeof(char *));
+        patient->patient_data->pulse_filename = (char *)calloc(40,sizeof(char *));
+        patient->patient_data->resp_common_filename = (char *)calloc(40,sizeof(char *));
+        patient->patient_data->resp_pulse_filename = (char *)calloc(40,sizeof(char *));
 
+        strcpy(patient->patient_data->common_filename,fnameroot);
+        strcat(patient->patient_data->common_filename,"_ptparms_trig");
+        strcat(patient->patient_data->common_filename,".out");
+        
+        strcpy(patient->patient_data->resp_common_filename,fnameroot);
+        strcat(patient->patient_data->resp_common_filename,"_ptparms_resp");
+        strcat(patient->patient_data->resp_common_filename,".out");
 
+        strcpy(patient->patient_data->pulse_filename,fnameroot);
+        strcat(patient->patient_data->pulse_filename,"_pulse_trig");
+        strcat(patient->patient_data->pulse_filename,".out");
+        
+        strcpy(patient->patient_data->resp_pulse_filename,fnameroot);
+        strcat(patient->patient_data->resp_pulse_filename,"_pulse_resp");
+        strcat(patient->patient_data->resp_pulse_filename,".out");
 
-
-
-
+        patient->patient_data->number_of_obs = Nobs;
+        patient->patient_data->avg_period_of_obs = ts[1][0];
+        
+        patient->patient_data->concentration = calloc(1,sizeof(Nobs));
+        patient->patient_data->time = calloc(1,sizeof(Nobs));
+        patient->patient_data->resp_concentration = calloc(1,sizeof(Nobs));
+        
+        for (j=0;j<Nobs;j++) {
+            patient->patient_data->concentration[j] = ts[(i+1),j];
+            patient->patient_data->time[j] = ts[0,j];
+            patient->patient_data->resp_concentration = ts_response[(i+1),j];
+        }
+        
+        //set starting values for patient estimates
+        patient->patient_parms->mass_mean = sv_ptmass_input;
+        patient->patient_parms->width_mean = sv_ptwidth_input;
+        patient->patient_parms->baseline = sv_ptbase_input;
+        patient->patient_parms->halflife = sv_pthl_input;
+        patient->patient_parms->errorsq = sv_pt_modelerrorvar;
+        
+        patient->resp_patient_parms->mass_mean = sv_ptmassresp_input;
+        patient->resp_patient_parms->width_mean = sv_ptwidthresp_input;
+        patient->resp_patient_parms->baseline = sv_ptbaseresp_input;
+        patient->resp_patient_parms->halflife = sv_pthlresp_input;
+        patient->resp_ patient_parms->errorsq = sv_pt_respmodelerrorvar;
+        
+        //set initial proposal variances
+        patient->patient_pv->pv_mass_mean = pv_pt_mass_input;
+        patient->patient_pv->pv_width_mean = pv_pt_width_input;
+        patient->patient_pv->pv_baseline = pv_pt_base_input;
+        patient->patient_pv->pv_halflife = pv_pt_hl_input;
+        
+        patient->resp_patient_pv->pv_mass_mean = pv_pt_massresp_input;
+        patient->resp_patient_pv->pv_width_mean = pv_pt_widthresp_input;
+        patient->resp_patient_pv->pv_baseline = pv_pt_baseresp_input;
+        patient->resp_patient_pv->pv_halflife = pv_pt_hlresp_input;
+        
+        insert_subject(patient,patientlist);
+    }
+    
  /***********saved for future use **************/
 /*********************************************/ 
   /*input prior for rho and nu here*/

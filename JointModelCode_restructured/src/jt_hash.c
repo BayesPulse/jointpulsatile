@@ -49,14 +49,14 @@ extern double fitstart;
   None
 ************************************************************************/
 
-Subject_type *initialize_subject(void)
+Patient *initialize_subject(void)
 {
   int i;
-  Subject_type *s;
-  Node_type *initialize_node(void);
+  Patient *s;
+  PulseEstimates *initialize_node(void);
 
 /* initialize memory for a subject */
-  if ((s = (Subject_type *)malloc(sizeof(Subject_type))) == NULL) {
+  if ((s = (Patient *)malloc(sizeof(Patient))) == NULL) {
     printf("initialize_subject: out of memory, can't allocate node\n");
     exit(1);
   }
@@ -67,21 +67,17 @@ Subject_type *initialize_subject(void)
 /* are inserted into the node at the appropriate time           */
 
   s->succ = s->pred = NULL;
-  s->driver = initialize_node();
-    s->response = initialize_node();
+  
 
-  s->decay_l = 0;
-    s->decay_f = 0;
-   s->numnode_l = 0;
-   s->numnode_f = 0 ;
-  for (i=0;i<2;i++)
-    s->theta_l[i] = 10;
-	for (i=0;i<2;i++)
-    s->theta_f[i] = 10;
-  for (i=0;i<2;i++)
-    s->basehalf_l[i] = 20;
- for (i=0;i<2;i++)
-    s->basehalf_f[i] = 20;
+    s->patient_parms = calloc(1,sizeof(PatientEstimates));
+    s->resp_patient_parms = calloc(1,sizeof(PatientEstimates));
+    s->patient_parms->pulselist = initialize_node();
+    s->resp_patient_parms->resppulselist = initialize_node();
+    
+    s->patient_data = calloc(1,sizeof(PatientData));
+    s->patient_pv = calloc(1,sizeof(PatientProposals));
+    s->patient_pv_response = calloc(1,sizeof(PatientProposals));
+    
   return s;
 }
 

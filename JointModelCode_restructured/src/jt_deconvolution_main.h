@@ -28,7 +28,6 @@ typedef struct node_tag{
 	double *mean_contrib;
 	double lambda; /*for fsh pulse only, lambda, denomsum
 	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
-    PulseProposals *pulsepv;
 } PulseEstimate;
 
 /****This structure contains the patient level parameters***/
@@ -37,9 +36,9 @@ typedef struct {
     Node_type *pulselist;
     double baseline;
     double halflife;
-    double decay;     // decay rate converted from above half-life
+    double decay = log(2)/halflife;     // decay rate converted from above half-life
     double errorsq;    // model error (variance)
-    double logerrorsq; // log of model error (may not be used)
+    double logerrorsq = log(errorsq); // log of model error (may not be used)
     double mass_mean;
     double width_mean;
     int pulse_count;
@@ -59,7 +58,6 @@ typedef struct {
     double *concentration;
     double *time;
     double *response_concentration;
-    double *response_time;
     int number_of_obs;
     double avg_period_of_obs;  /**in minutes**/
     double duration_of_obs = number_of_obs * period_of_obs;  /**in minutes**/
@@ -79,10 +77,14 @@ typedef struct {
 typedef struct patient_tag {
     struct patient_tag *succ;
     struct patient_tag *pred;
-    PatientEstimates *patient_estimates;
-    PatientEstimates *resp_patient_estimates;
+   
+    PatientEstimates *patient_parms;
+    PatientEstimates *resp_patient_parms;
     PatientData *patient_data;
     PatientProposals *patient_pv;
+    PatientProposals *patient_pv_response;
+    PulseProposals *pulse_pv;
+    PulseProposals *resp_pulse_pv;
     
 } Patient;
 
