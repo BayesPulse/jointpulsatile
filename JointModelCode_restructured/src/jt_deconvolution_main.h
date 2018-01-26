@@ -8,15 +8,6 @@
 
 
 /*****This structure contains the information of each pulse********/
-typedef struct {
-    double pv_time;
-    double pv_mass;
-    double pv_width;
-    double pv_tscalemass;
-    double pv_tscalewidth;
-    
-} PulseProposals;
-
 typedef struct node_tag{
 	struct node_tag *succ;
 	struct node_tag *pred;
@@ -30,15 +21,24 @@ typedef struct node_tag{
 	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
 } PulseEstimate;
 
+typedef struct {
+    double pv_time;
+    double pv_mass;
+    double pv_width;
+    double pv_tscalemass;
+    double pv_tscalewidth;
+    
+} PulseProposals;
+
 /****This structure contains the patient level parameters***/
 typedef struct {
     
-    Node_type *pulselist;
+    PulseEstimate *pulselist;
     double baseline;
     double halflife;
-    double decay = log(2)/halflife;     // decay rate converted from above half-life
+    double decay;     // decay rate converted from above half-life
     double errorsq;    // model error (variance)
-    double logerrorsq = log(errorsq); // log of model error (may not be used)
+    double logerrorsq; // log of model error (may not be used)
     double mass_mean;
     double width_mean;
     int pulse_count;
@@ -60,7 +60,7 @@ typedef struct {
     double *response_concentration;
     int number_of_obs;
     double avg_period_of_obs;  /**in minutes**/
-    double duration_of_obs = number_of_obs * period_of_obs;  /**in minutes**/
+    double duration_of_obs;  /**in minutes**/
     
     char *common_filename; /*patient level filename for output for baseline, half-life, mass_mean, width_mean*/
     FILE *csubfile;   /*patient level file for baseline, half-life, mass_mean, width_mean*/
@@ -92,8 +92,8 @@ typedef struct patient_tag {
 typedef struct {
     double pv_baseline_mean;
     double pv_HL_mean;
-    double pv_baseline_variance;
-    double pv_HL_variance;
+    double pv_baseline_SD;
+    double pv_HL_SD;
     double pv_mass_mean;
     double pv_width_mean;
     double pv_mass_SD;
@@ -137,9 +137,8 @@ typedef struct{
     double log_cluster_size; /*log scale cluster size*/
     double cluster_width; /*cluster width (nu) in the cox process for the respose hormone intensity*/
     double log_cluster_width;
-    
-    AssocProposals *pv_assoc;
-    
+    double mass_corr;
+
     char *popassoc_filename; /* output filename of the association parameters*/
     FILE *popassocfile; /* file of the association parameters*/
     

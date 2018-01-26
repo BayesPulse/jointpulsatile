@@ -94,10 +94,17 @@ double fitend;
  double corr_prior_alpha: alpha parameter in the beta prior on the correlation.
  double corr_prior_beta: beta parameter in the beta prior on the correlation.
  
+ 
+ 
  ***Parameters at population level and starting values****
    double svmean, svptsd, svsd;
- PopulationEstimates popparms: population level parameter values for trigger.
- PopulationEstimates popparms_response: population level parameter values for response.
+ PopulationEstimates *popparms;
+ PopulationEstimates *popparms_response;
+ PopulationProposal *pv_pop;
+ PopulationProposal *pv_pop_response;
+ double pvmean, pvptsd, pvsd;
+ double svmean, svptsd, svsd;
+ 
  double sv_ptmass_input:
  double sv_ptwidth_input:
  double sv_ptbase_input:
@@ -108,9 +115,14 @@ double fitend;
  double pv_pt_base_input:
  double pv_pt_hl_input:
  
+ AssocPriors *assocprior;
+ AssocEstimates *assocparms;
+ AssocProposals *pv_assoc;
  
- 
- ************************************************************************/
+ double sv_cluster_input:
+ double sv_width_input:
+ double sv_mass_corr_input:
+************************************************************************/
 
 int main(int argc,char *argv[])
 {
@@ -118,12 +130,15 @@ int main(int argc,char *argv[])
 /*****************************************/
 /***Variable defining***/
 /*****************************************/
-    int *nobs,Nsubj, MCMCiter,Nthin, Nburnin, i;
+    int *Nobs,Nsubj, MCMCiter,Nthin, Nburnin, i;
     
     char datafile[90];
     char datafile_response[100];
-
     char fnameroot[100];
+    
+    FILE *fseed, *finput;
+    
+    unsigned long *seed;
     
     PopulationPriors *popprior, *popprior_response;  //Data structures that hold the population prior settings from the user for trigger and response, respectively
   
@@ -139,61 +154,26 @@ int main(int argc,char *argv[])
     double mass_corr_beta_mean_input, mass_corr_beta_var_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
     double svmean, svptsd, svsd; //user inputs for starting values of population level parameters
     
-    PopulationPriors *popprior;
-    PopulationPriors *popprior_response;
     AssocPriors *assocprior;
+    AssocEstimates *assocparms;
+    AssocProposals *pv_assoc;
+    
+    double sv_cluster_input, sv_width_input, sv_mass_corr_input; //user input starting value for association parameters
+    double pv_cluster_size, pv_cluster_width, pv_mass_corr; //user input starting value for proposal variances for association parameters
     
     PopulationEstimates *popparms;
     PopulationEstimates *popparms_response;
+    PopulationProposal *pv_pop;
+    PopulationProposal *pv_pop_response;
+    double pvmean, pvptsd, pvsd;
+    double svmean, svptsd, svsd;
     
     Patient *patientlist, *patient;
     double sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar;
     double pv_pt_mass_input,pv_pt_width_input,pv_pt_base_input,pv_pt_hl_input;
     double sv_ptmassresp_input,sv_ptwidthresp_input,sv_ptbaseresp_input,sv_pthlresp_input,sv_pt_respmodelerrorvar;
     double pv_pt_massresp_input,pv_pt_widthresp_input,pv_pt_baseresp_input,pv_pt_hlresp_input;
-    
-/***OLD CODE BELOW HERE
-    char tmp[5];
-  unsigned long *seed;
-  double **ts_l,**ts_f,propvar[33] ,**temp2;
- double mprior1, mprior2, mprior3, mprior4;
-  double psprior1, psprior2, psprior3, psprior4,psprior5, psprior6, psprior7, psprior8,psprior9;
-  double bprior1, bprior2, bprior3, bprior4, bprior5, bprior6;
-  double hprior1, hprior2, hprior3,hprior4, hprior5, hprior6;
-  double sprior1, sprior2,sprior3,sprior4;
-  int nprior1, nprior2;
-  double gprior,betaprior;
-  double rhoprior1,rhoprior2;
-  double nuprior1,nuprior2;
-  
-  double mstart1, mstart2, mstart3, mstart4;
-  double pstart1, pstart2, pstart3,pstart4, pstart5, pstart6,pstart7, pstart8, pstart9,psprior10, psprior11;
-  double bstart1, bstart2,bstart3, bstart4;
-  double hstart1, hstart2,hstart3, hstart4;
-  double sstart1,sstart2;
-  double rhostart,nustart;
 
-  FILE *fseed, *finput;
-  Common_parms *parms_l,*parms_f;
-  Priors *priors;
-  Hyper_priors *hyper;
-  Subject_type *subject, *sublist;
-
-  double **read_data_file(char *,int *,int);
-  double rnorm(double,double,unsigned long *);
-  double rgamma(double,double,unsigned long *);
-  void destroy_sublist(Subject_type *);
-  Subject_type *initialize_subject(void);
-  void insert_subject(Subject_type *,Subject_type *);
-  void mcmc(Subject_type *, Common_parms *, Common_parms *, double **, double **,long, int, Priors *, unsigned long *,
-	  char *,  char *, double[], Hyper_priors *);
-  char *itoa(int , char *, int );
-  int cholesky_decomp(double **,int);
-  double **cholesky_invert(int, double **);
-
-
-
-  Subject_type *initialize_subject(void); ***/
     
 /*This assesses if there is an input filename with the program call*/
 
@@ -319,10 +299,10 @@ int main(int argc,char *argv[])
     fscanf(finput,"%lf %lf\n",&mean_clusterwidth_input, &var_clusterwidth_input);
     fscanf(finput,"%lf %lf\n",&mass_corr_alpha_input, &mass_corr_beta_input);
     
-    assocprior->mean_log_cluster_size = mean_cluster_input;
-    assocprior->variance_log_cluster_size = var_cluster_input;
-    assocprior->mean_log_cluster_width = mean_clusterwidth_input;
-    assocprior->variance_log_cluster_width = var_clusterwidth_input;
+    assocprior->mean_log_cluster_size = log(mean_cluster_input);
+    assocprior->variance_log_cluster_size = log(var_cluster_input);
+    assocprior->mean_log_cluster_width = log(mean_clusterwidth_input);
+    assocprior->variance_log_cluster_width = log(var_clusterwidth_input);
     assocprior->corr_alpha = mass_corr_alpha_input;
     associprior->corr_beta = mass_corr_beta_input;
     
@@ -368,13 +348,37 @@ int main(int argc,char *argv[])
     popparms_response->halflife_SD = svsd;
     
     //name the output file for trigger
+    popparms->pop_filename = (char *)calloc(40,sizeof(char *));
     strcpy(popparms->pop_filename,fnameroot);
     strcat(popparms->pop_filename,"_pop_trig.out");
     popparms->popfile = fopen(popparms->pop_filename,"w");
+    
     //name the output file for response
+    popparms_response->pop_filename = (char *)calloc(40,sizeof(char *));
     strcpy(popparms_response->pop_filename,fnameroot);
     strcat(popparms_response->pop_filename,"_pop_resp.out");
     popparms_response->popfile = fopen(popparms_response->pop_filename,"w");
+    
+/***Read in the starting values for the association parameters***/
+    
+    assocparms = calloc(1,sizeof(AssocEstimates));
+    
+    fscanf(finput,"%lf %lf %lf\n",sv_cluster_input,sv_width_input,sv_mass_corr_input);
+    assocparms->cluster_size = sv_cluster_input;
+    assocparms->log_cluster_size = log(sv_cluster_input);
+    assocparms->cluster_width = sv_width_input;
+    assocparms->log_cluster_width = log(sv_width_input);
+    assocparms->mass_corr = sv_mass_corr_input;
+    
+    pv_assoc = calloc(1,sizeof(AssocProposals));
+    
+    fscanf(finput,"%lf %lf %lf\n",pv_cluster_size, pv_cluster_width, pv_mass_corr);
+    //name the output file for association parameters
+    assocparms->popassoc_filename = (char *)calloc(40,sizeof(char *));
+    strcpy(assocparms->popassoc_filename,fnameroot);
+    strcat(assocparms->popassoc_filename,"_pop_assoc.out");
+    assocparms->popfile = fopen(assocparms->popassoc_filename,"w");
+    
 
 /**Read in the starting values for patient level parameters**/
     //we need to create the patient level data info
@@ -452,6 +456,47 @@ int main(int argc,char *argv[])
         
         insert_subject(patient,patientlist);
     }
+
+    
+    pv_pop = calloc(1,sizeof(PopulationPriors));
+    pv_pop_response = calloc(1,sizeof(PopulationPriors));
+    
+    fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the mass starting proposal variances
+    pv_pop->pv_mass_mean = pvmean;
+    pv_pop->pv_mass_SD = pvptsd;
+    pv_pop->pv_mass_mean_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the mass starting proposal variances for the response
+    pv_pop_response->pv_mass_mean = pvmean;
+    pv_pop_response->pv_mass_SD = pvptsd;
+    pv_pop_response->pv_mass_mean_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the width starting proposal variance
+    pv_pop->pv_width_mean = pvmean;
+    pv_pop->pv_width_SD = pvptsd;
+    pv_pop->pv_width_mean_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the width starting proposal variance for the response
+    pv_pop_response->pv_width_mean = pvmean;
+    pv_pop_response->pv_width_SD = pvptsd;
+    pv_pop_response->pv_width_mean_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf\n",&pvmean,&pvsd); //read in the baseline starting values
+    pv_pop->pv_baseline_mean = pvmean;
+    pv_pop->pv_baseline_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf\n",&pvmean,&pvsd); // read in the baseline starting values for the response
+    pv_pop_response->pv_baseline_mean = pvmean;
+    pv_pop_response->pv_baseline_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf\n",&pvmean,&pvsd); //read in the half-life starting values
+    pv_pop->pv_HL_mean = pvmean;
+    pv_pop->pv_HL_SD = pvsd;
+    
+    fscanf(finput,"%lf %lf\n",&pvmean,&pvsd); // read in the half-life starting values for the response
+    pv_pop_response->pv_HL_mean = pvmean;
+    pv_pop_response->pv_HL_SD = pvsd;
+    
     
  /***********saved for future use **************/
 /*********************************************/ 
@@ -578,7 +623,7 @@ int main(int argc,char *argv[])
   
       fflush(stdout);
 
-      mcmc(sublist,parms_l,parms_f,ts_l,ts_f,iter,*N,priors,seed,commonl,commonf,propvar,hyper);
+   //   mcmc(sublist,parms_l,parms_f,ts_l,ts_f,iter,*N,priors,seed,commonl,commonf,propvar,hyper);  //not correct now
   
     destroy_sublist(sublist);
     /**************************/
