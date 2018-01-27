@@ -472,11 +472,11 @@ int main(int argc,char *argv[])
         patient->pulse_pv->pv_tscalemass = pv_tscalemass_input;
         patient->pulse_pv->pv_tscalewidth = pv_tscalewidth_input;
         
-        patient->pulse_pv_response->pv_time = pv_resptime_input;
-        patient->pulse_pv_response->pv_mass = pv_respmass_input;
-        patient->pulse_pv_response->pv_width = pv_respwidth_input;
-        patient->pulse_pv_response->pv_tscalemass = pv_resptscalemass_input;
-        patient->pulse_pv_response->pv_tscalewidth = pv_resptscalewidth_input;
+        patient->resp_pulse_pv->pv_time = pv_resptime_input;
+        patient->resp_pulse_pv->pv_mass = pv_respmass_input;
+        patient->resp_pulse_pv->pv_width = pv_respwidth_input;
+        patient->resp_pulse_pv->pv_tscalemass = pv_resptscalemass_input;
+        patient->resp_pulse_pv->pv_tscalewidth = pv_resptscalewidth_input;
         
         insert_subject(patient,patientlist);
     }
@@ -522,134 +522,13 @@ int main(int argc,char *argv[])
     pv_pop_response->pv_HL_SD = pvsd;
     
     
- /***********saved for future use **************/
-/*********************************************/ 
-  /*input prior for rho and nu here*/
-/*************************************************/
-    fscanf(finput,"%lf %lf %lf %lf\n", &mstart1, &mstart2, &mstart3,&mstart4); /*10th line, starting value for mean pulse features*/
-    priors->fe_mean_l[0] = mstart1;
-	priors->fe_mean_f[0]=mstart2;
-	priors->fe_mean_l[1] = mstart3;
-	priors->fe_mean_f[1]=mstart4;
-  
-    
-    fscanf(finput,"%lf %lf %lf %lf %lf %lf %lf %lf %lf\n", &pstart1, &pstart2, &pstart3,&pstart4,&pstart5,&pstart6,&pstart7,&pstart8,&pstart9 );/*11th line starting value for variance pulse features*/
-    /*first three is the variance-covariance for population variance and cor of pulse mass*/
-	/*next two (4-5) is the population variance for pulse width */
-	/*next four (6-9) is the subject-level variance for pulse mass and width*/
-	priors->re_var[0][0] = pstart1;
-	priors->re_var[1][1] = pstart2;
-	priors->re_var[0][1]=priors->re_var[1][0] = sqrt(pstart2)*sqrt(pstart1)*pstart3;
-	  if (!cholesky_decomp(priors->re_var,2)) {
-     printf("proposal variance matrix not PSD matrix\n");
-     exit(0);
-   }
-   priors->fe_precision = cholesky_invert(2,priors->re_var);
-   priors->fe_precision_wl = pstart4;
-   priors->fe_precision_wf = pstart5;  
-   parms_l->re_precision[0]= pstart6;
-   parms_l->re_precision[1]= pstart7;
-   parms_f->re_precision[0]= pstart8;
-   parms_f->re_precision[1]= pstart9;
-
-   
-   
-
-   
-    fscanf(finput,"%lf %lf %lf %lf\n", &bstart1, &bstart2,&bstart3, &bstart4); /*12th line baseline*/
-    priors->meanbh_l[0] = bstart1;
-    priors->varbh_l[0] = bstart2;
-	priors->meanbh_f[0] = bstart3;
-    priors->varbh_f[0] = bstart4;
-    
-    fscanf(finput,"%lf %lf %lf %lf\n", &hstart1, &hstart2,&hstart3, &hstart4); /*13th line half life */
-    priors->meanbh_l[1] = hstart1;
-    priors->varbh_l[1] = hstart2;
-	priors->meanbh_f[1] = hstart3;
-    priors->varbh_f[1] = hstart4;
-
-    fscanf(finput,"%lf %lf\n", &sstart1, &sstart2);  /*14th line error*/
-    parms_l->sigma = sstart1;
-    parms_l->lsigma = log(parms_l->sigma);
-	parms_f->sigma = sstart2;
-    parms_f->lsigma = log(parms_f->sigma);
-	parms_l -> rho= 1;
-    parms_l ->lrho = log(parms_l->rho);
-	
-	parms_l ->nu= 4;
-	parms_l -> lnu=log(parms_l ->nu);
-	parms_l->gamma = 0.1;
-	parms_l->beta =4;
-	
-
-
-    parms_l->numsub =parms_f->numsub = subj;
-
-    fscanf(finput,"%lf %lf \n", &propvar[0], &propvar[1]);  /*15th lineï¼?prop for population width variance */
-    fscanf(finput,"%lf %lf %lf %lf\n", &propvar[2],&propvar[3], &propvar[4], &propvar[5]); /*16 th line: prop for four variance term of population md*/
-    fscanf(finput,"%lf %lf %lf\n", &propvar[6], &propvar[7],&propvar[8]); /*17 th line: prop for subject mass, third is the cor*/
-    fscanf(finput,"%lf %lf\n", &propvar[9], &propvar[10]); /*18th line: uwi*/
-    fscanf(finput,"%lf %lf %lf %lf \n", &propvar[11],&propvar[12],&propvar[13],&propvar[14]); /*19th line v*/
-	fscanf(finput,"%lf %lf %lf %lf %lf %lf\n", &propvar[15],&propvar[16],&propvar[17],&propvar[18],&propvar[19],&propvar[20]); /*20th line bi, hi,3rd and 6th is the cor*/
-    fscanf(finput,"%lf %lf %lf %lf\n", &propvar[21],&propvar[22],&propvar[23],&propvar[24]); /*21th line v, random effect, lh first and fsh*/
-    fscanf(finput,"%lf %lf \n", &propvar[25],&propvar[26]); /*22th line v, time, lh first and fsh*/
-	fscanf(finput, "%lf %lf %lf %lf  \n", &propvar[27], &propvar[28], &propvar[29], &propvar[30]); /*23th line v, eta, lh first and fsh*/
-	fscanf(finput, "%lf %lf \n", &propvar[31], &propvar[32]); /*24th line rho and niu*/
-
-    fclose(finput);
-
-     /*Create the list of subjects*/
-      sublist = initialize_subject();
-          
-      i=0;
-      for(i=0;i<subj;i++){
-          subject=initialize_subject();
-          subject->common_l = (char *)calloc(30,sizeof(char *));
-          subject->pulse_l = (char *)calloc(30,sizeof(char *));
-          subject->common_f = (char *)calloc(30,sizeof(char *));
-          subject->pulse_f = (char *)calloc(30,sizeof(char *));
-
-          sprintf(tmp,"%d",subj-i);
-
-          strcpy(subject->common_l,commonl);
-          strcat(subject->common_l,"s");
-          strcat(subject->common_l,tmp);
-          strcat(subject->common_l,".out");
-		  
-		  strcpy(subject->common_f,commonf);
-          strcat(subject->common_f,"s");
-          strcat(subject->common_f,tmp);
-          strcat(subject->common_f,".out");
-          
-          strcpy(subject->pulse_l,parml);
-          strcat(subject->pulse_l,"s");
-          strcat(subject->pulse_l,tmp);
-          strcat(subject->pulse_l,".out");
-
-		  strcpy(subject->pulse_f,parmf);
-          strcat(subject->pulse_f,"s");
-          strcat(subject->pulse_f,tmp);
-          strcat(subject->pulse_f,".out");
-		  
-          subject->basehalf_l[0]=bstart1;
-		  subject->basehalf_f[0]=bstart3;
-          subject->basehalf_l[1]=hstart1;
-		  subject->basehalf_l[1]=hstart3;
-
-
-          subject->theta_l[0]=mstart1;
-		  subject->theta_f[0]=mstart2;
-          subject->theta_l[1]=mstart3;
-		  subject->theta_f[1]=mstart4;
-
-          insert_subject(subject,sublist);
-      }
+ 
   
       fflush(stdout);
 
    //   mcmc(sublist,parms_l,parms_f,ts_l,ts_f,iter,*N,priors,seed,commonl,commonf,propvar,hyper);  //not correct now
   
-    destroy_sublist(sublist);
+    
     /**************************/
     
     /* save the current random number as the seed for the next simulation */
@@ -659,43 +538,29 @@ int main(int argc,char *argv[])
     /**********************************************************************/
 
     /* deallocate resources */
-
+    destroy_sublist(patientlist);
     free(seed);
-    for (i=0;i<*N;i++)
-      free(ts_f[i]);
-    free(ts_f);
-	 for (i=0;i<*N;i++)
-      free(ts_l[i]);
-    free(ts_l);
+    for (i=0;i<*Nobs;i++)
+      free(ts[i]);
+    free(ts);
+	 for (i=0;i<*Nobs;i++)
+      free(ts_response[i]);
+    free(ts_response);
 	
-    free(N);
-    free(priors->re_var_f);
-    free(priors->re_var_l);
-	free(priors->fe_mean_l);
-    free(priors->fe_mean_f);
-	free(parms_f->re_precision);
-    free(parms_l->re_precision);
-	
-	 for (i=0;i<2;i++)
-      free(hyper->prec[i]);
-    free(hyper->prec);
-
-	 for (i=0;i<2;i++)
-      free(priors->fe_precision[i]);
-    free(priors->fe_precision);
-	
-	for (i=0;i<2;i++)
-    free(priors->re_var[i]);
- free(priors->re_var);
-	
-
-   
-
-    free(hyper);
-    free(priors);
-    free(parms_l);
-	free(parms_f);
-	free(temp2);
+    free(Nobs);
+    free(popprior);
+    free(popprior_response);
+    free(assocprior);
+    free(popparms->pop_filename);
+    free(popparms_response->pop_filename);
+    free(popparms);
+    free(popparms_response);
+    free(assocparms->popassoc_filename);
+    free(assocparms);
+    free(pv_assoc);
+    free(pv_pop);
+    free(pv_pop_response);
+    
 /************************/
 
   return 0;
