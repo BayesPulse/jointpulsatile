@@ -312,8 +312,8 @@ int main(int argc,char *argv[])
     
 /**Read in the starting values for population parameters**/
     
-    popparms = calloc(1,sizeof(PopulationPriors));
-    popparms_response = calloc(1,sizeof(PopulationPriors));
+    popparms = calloc(1,sizeof(PopulationEstimates));
+    popparms_response = calloc(1,sizeof(PopulationEstimates));
     
     fscanf(finput,"%lf %lf %lf\n",&svmean,&svptsd,&svsd); // read in the mass starting values
     popparms->mass_mean = svmean;
@@ -355,13 +355,11 @@ int main(int argc,char *argv[])
     popparms->pop_filename = (char *)calloc(40,sizeof(char *));
     strcpy(popparms->pop_filename,fnameroot);
     strcat(popparms->pop_filename,"_pop_trig.out");
-    popparms->popfile = fopen(popparms->pop_filename,"w");
     
     //name the output file for response
     popparms_response->pop_filename = (char *)calloc(40,sizeof(char *));
     strcpy(popparms_response->pop_filename,fnameroot);
     strcat(popparms_response->pop_filename,"_pop_resp.out");
-    popparms_response->popfile = fopen(popparms_response->pop_filename,"w");
     
 /***Read in the starting values for the association parameters***/
     
@@ -377,6 +375,7 @@ int main(int argc,char *argv[])
     pv_assoc = calloc(1,sizeof(AssocProposals));
     
     fscanf(finput,"%lf %lf %lf\n",pv_cluster_size, pv_cluster_width, pv_mass_corr);
+    
     //name the output file for association parameters
     assocparms->popassoc_filename = (char *)calloc(40,sizeof(char *));
     strcpy(assocparms->popassoc_filename,fnameroot);
@@ -418,10 +417,6 @@ int main(int argc,char *argv[])
 
         sprintf(patientnumb,"%d",Nsubj-i);
         
-        strcpy(subject->common_l,commonl);
-        strcat(subject->common_l,"s");
-        strcat(subject->common_l,tmp);
-        strcat(subject->common_l,".out");
         strcpy(patient->patient_data->pulse_filename,fnameroot);
         strcat(patient->patient_data->pulse_filename,"_pulse_trig");
         strcat(patient->patient_data->pulse_filename,patientnumb);
@@ -429,10 +424,12 @@ int main(int argc,char *argv[])
         
         strcpy(patient->patient_data->resp_pulse_filename,fnameroot);
         strcat(patient->patient_data->resp_pulse_filename,"_pulse_resp");
+        strcat(patient->patient_data->pulse_filename,patientnumb);
         strcat(patient->patient_data->resp_pulse_filename,".out");
 
         patient->patient_data->number_of_obs = Nobs;
         patient->patient_data->avg_period_of_obs = ts[1][0];
+        patient->patient_data->duration_of_obs = (double)Nobs*ts[1][0];
         
         patient->patient_data->concentration = calloc(1,sizeof(Nobs));
         patient->patient_data->time = calloc(1,sizeof(Nobs));

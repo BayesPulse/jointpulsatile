@@ -19,7 +19,7 @@ typedef struct node_tag{
 	double *mean_contrib; /*pulse level contribution to the integral of mean concentration
 	double lambda; /*for fsh pulse only, lambda, denomsum
 	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
-} PulseEstimate;
+} PulseEstimates;
 
 typedef struct {
     double pv_time;
@@ -33,7 +33,7 @@ typedef struct {
 /****This structure contains the patient level parameters***/
 typedef struct {
     
-    PulseEstimate *pulselist;
+    PulseEstimates *pulselist;
     double baseline;
     double halflife;
     double decay;     // decay rate converted from above half-life
@@ -89,20 +89,6 @@ typedef struct patient_tag {
 } Patient;
 
 /*******the population level parameters.  These are also in a Bayesian framework, priors on the patient level parameters*******/
-typedef struct {
-    double pv_baseline_mean;
-    double pv_HL_mean;
-    double pv_baseline_SD;
-    double pv_HL_SD;
-    double pv_mass_mean;
-    double pv_width_mean;
-    double pv_mass_SD;
-    double pv_width_SD;
-    double pv_mass_mean_SD;
-    double pv_width_mean_SD;
-} PopulationProposal;
-
-
 typedef struct{
     double baseline_mean;  /*theta_b*/
     double halflife_mean;  /*theta_h*/
@@ -125,11 +111,18 @@ typedef struct{
     
 } PopulationEstimates;
 
-typedef struct{
-    double pv_clustersize;
-    double pv_clusterwidth;
-    double pv_masscorr;
-} AssocProposals;
+typedef struct {
+    double pv_baseline_mean;
+    double pv_HL_mean;
+    double pv_baseline_SD;
+    double pv_HL_SD;
+    double pv_mass_mean;
+    double pv_width_mean;
+    double pv_mass_SD;
+    double pv_width_SD;
+    double pv_mass_mean_SD;
+    double pv_width_mean_SD;
+} PopulationProposal;
 
 /****This structure contains the priors on the patient level info: population parameters***/
 typedef struct{
@@ -143,6 +136,12 @@ typedef struct{
     FILE *popassocfile; /* file of the association parameters*/
     
 } AssocEstimates;
+
+typedef struct{
+    double pv_clustersize;
+    double pv_clusterwidth;
+    double pv_masscorr;
+} AssocProposals;
 
 /*The user defined values for the priors on the population level parameters*/
 /*This structure contains all the variables that the user sets when setting the priors*/

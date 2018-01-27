@@ -83,13 +83,13 @@ Patient *initialize_subject(void)
   return s;
 }
 
-Node_type *initialize_node(void)
+PulseEstimates *initialize_node(void)
 {
   int i;
-  Node_type *p;
+  PulseEstimates *p;
 
 /* initialize memory for a node */
-    if ((p = (Node_type *)malloc(sizeof(Node_type))) == NULL) {
+    if ((p = (PulseEstimates *)malloc(sizeof(PulseEstimates))) == NULL) {
     printf("initialize_node: out of memory, can't allocate node\n");
     exit(1);
   }
@@ -99,14 +99,14 @@ Node_type *initialize_node(void)
 /* it is up to the programmer to insure that the correct values */
 /* are inserted into the node at the appropriate time           */
 
-  p->succ = p->pred = NULL;
-  p->mean_contrib = NULL;
-  p->time = fitstart;
-  p->lambda =0;
-  for (i=0;i<2;i++) {
-    p->theta[i] = 0;
-	p->eta[i] =1 ;
-}
+    p->succ = p->pred = NULL;
+    p->mean_contrib = NULL;
+    p->time = fitstart;
+    p->mass = 0.1;
+    p->width = 0.1;
+    p->tvarscalemass = 1;
+    p->tvarscalewidth = 1;
+    p->lambda =0;
   return p;
 }
 
@@ -116,7 +116,7 @@ Node_type *initialize_node(void)
 /*********************************************************************/
 /*sequential_search: finds where a pulse's location fits within an established
                      linked list
-    ARGUMENTS: Node_type *list; this is the current list of pulses that exist;
+    ARGUMENTS: Pulse_Estimates *list; this is the current list of pulses that exist;
                double time; this is the location of a new pulse; note that we
                   do not actually input a new pulse, we just input its location
     RETURNS: *loc, the newly created pulse's prececessor
@@ -130,9 +130,9 @@ Node_type *initialize_node(void)
   None
 ************************************************************************/
 
-Node_type *sequential_search(Node_type *list,double time)
+PulseEstimates *sequential_search(Pulse_Estimates *list,double time)
 {
-  Node_type *loc,*locm1;
+  Pulse_Estimates *loc,*locm1;
 
 /* searches through the linked list "list" for the first occassion of */
 /* "list->time" that is less than "time".                             */
@@ -154,8 +154,8 @@ Node_type *sequential_search(Node_type *list,double time)
 /*********************************************************************/
 /*********************************************************************/
 /*insert_node: integrates a newly created pulse into the linked list
-    ARGUMENTS: Node_type *new_node; the newly created pulse;
-               Node_type *list; this is the current list of pulses that exist;
+    ARGUMENTS: Pulse_Estimates *new_node; the newly created pulse;
+               Pulse_Estimates *list; this is the current list of pulses that exist;
     RETURNS: None; all updates are made internally
 **********************************************************************/
 /*********************************************************************/
@@ -166,9 +166,9 @@ Node_type *sequential_search(Node_type *list,double time)
   sequential_search: found in this file; identifies inputted pulse's predecessor
 ***********************************************************************/
 
-void insert_node(Node_type *new_node,Node_type *list)
+void insert_node(Pulse_Estimates *new_node,Pulse_Estimates *list)
 {
-  Node_type *node;
+  Pulse_Estimates *node;
 
 /* insert the node "new_node" in the linked list "list" */
 /* find the position in which to insert "new_node"      */
@@ -186,7 +186,7 @@ void insert_node(Node_type *new_node,Node_type *list)
 }
 
 
-void insert_subject(Subject_type *new_subj,Subject_type *sublist)
+void insert_subject(Patient *new_subj,Patient *sublist)
 {
 
 /* insert the node "new_node" in the linked list "list" */
@@ -209,8 +209,8 @@ void insert_subject(Subject_type *new_subj,Subject_type *sublist)
 /*********************************************************************/
 /*delete_node: frees memory associated with inputted pulse and reassigns
                pointers of remaining pulses
-    ARGUMENTS: Node_type *node; the pulse to be deleted;
-               Node_type *list; this is the current list of pulses that exist;
+    ARGUMENTS: Pulse_Estimates *node; the pulse to be deleted;
+               Pulse_Estimates *list; this is the current list of pulses that exist;
     RETURNS: None; all updates are made internally
 **********************************************************************/
 /*********************************************************************/
@@ -221,7 +221,7 @@ void insert_subject(Subject_type *new_subj,Subject_type *sublist)
   None
 ************************************************************************/
 
-void delete_node(Node_type *node,Node_type *list)
+void delete_node(Pulse_Estimates *node,Pulse_Estimates *list)
 {
   free(node->mean_contrib);
   
@@ -239,7 +239,7 @@ void delete_node(Node_type *node,Node_type *list)
 /*********************************************************************/
 /*********************************************************************/
 /*print_list: prints information about all pulses in the linked list
-    ARGUMENTS: Node_type *list; this is the current list of pulses that exist;
+    ARGUMENTS: Pulse_Estimates *list; this is the current list of pulses that exist;
     RETURNS: None; all updates are made internally
 **********************************************************************/
 /*********************************************************************/
@@ -251,16 +251,16 @@ void delete_node(Node_type *node,Node_type *list)
   None
 ************************************************************************/
 
-void print_list(Node_type *list)
+void print_list(Pulse_Estimates *list)
 {
   int i;
-  Node_type *node;
+  Pulse_Estimates *node;
 
 /* traverses the linked list and prints the contents of each node */
   i = 1;
   node = list->succ;
   while (node != NULL) {
-    printf("%2d %8.4lf %8.4lf %8.4lf \n",i,node->time,node->theta[0],node->theta[1]);
+    printf("%2d %8.4lf %8.4lf %8.4lf %8.4lf %8.4lf\n",i,node->time,node->mass,node->width,node->tvarscalemass,node->tvarscalewidth);
     node = node->succ;
     i++;
   }
@@ -271,7 +271,7 @@ void print_list(Node_type *list)
 /*********************************************************************/
 /*********************************************************************/
 /*destroy_list: frees memory throughout the linked list
-    ARGUMENTS: Node_type *list; this is the current list of pulses that exist;
+    ARGUMENTS: Pulse_Estimates *list; this is the current list of pulses that exist;
     RETURNS: None; all updates are made internally
 **********************************************************************/
 /*********************************************************************/
@@ -282,9 +282,9 @@ void print_list(Node_type *list)
   None
 ************************************************************************/
 
-void destroy_list(Node_type *list)
+void destroy_list(Pulse_Estimates *list)
 {
-  Node_type *loc;
+  Pulse_Estimates *loc;
 
   while (list->succ != NULL) {
     loc = list->succ;
@@ -296,21 +296,48 @@ void destroy_list(Node_type *list)
   free(list);
 }
 
-void destroy_sublist(Subject_type *sublist)
+void destroy_sublist(Patient *sublist)
 {
-  Subject_type *loc;
-  void destroy_list(Node_type *);
+  Patient *loc;
+  void destroy_list(Pulse_Estimates *);
 
   while (sublist->succ != NULL) {
-    loc = sublist->succ;
-    destroy_list(sublist->driver);
-	destroy_list(sublist->response);
-
-    free(sublist);
+      loc = sublist->succ;
+      destroy_list(sublist->patient_parms->pulselist);
+      destroy_list(sublist->resp_patient_parms->pulselist);
+      free(patient_parms);
+      free(resp_patient_parms);
+      free(patient_data->concentration);
+      free(patient_data->time);
+      free(patient_data->response_concentration);
+      free(patient_data->common_filename);
+      free(patient_data->pulse_filename);
+      free(patient_data->resp_common_filename);
+      free(patient_data->resp_pulse_filename);
+      free(patient_data);
+      free(patient_pv);
+      free(patient_pv_response);
+      free(pulse_pv);
+      free(resp_pulse_pv);
+      free(sublist);
     sublist = loc;
   }
-  destroy_list(sublist->driver);
-  destroy_list(sublist->response);
+    destroy_list(sublist->patient_parms->pulselist);
+    destroy_list(sublist->resp_patient_parms->pulselist);
+    free(patient_parms);
+    free(resp_patient_parms);
+    free(patient_data->concentration);
+    free(patient_data->time);
+    free(patient_data->response_concentration);
+    free(patient_data->common_filename);
+    free(patient_data->pulse_filename);
+    free(patient_data->resp_common_filename);
+    free(patient_data->resp_pulse_filename);
+    free(patient_data);
+    free(patient_pv);
+    free(patient_pv_response);
+    free(pulse_pv);
+    free(resp_pulse_pv);
 
   free(sublist);
 }
