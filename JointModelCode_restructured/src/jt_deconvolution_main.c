@@ -317,7 +317,7 @@ int main(int argc,char *argv[])
     assocprior->mean_log_cluster_width = log(mean_clusterwidth_input);
     assocprior->variance_log_cluster_width = log(var_clusterwidth_input);
     assocprior->corr_alpha = mass_corr_alpha_input;
-    associprior->corr_beta = mass_corr_beta_input;
+    assocprior->corr_beta = mass_corr_beta_input;
     
 /**Read in the starting values for population parameters**/
     
@@ -374,7 +374,7 @@ int main(int argc,char *argv[])
     
     assocparms = calloc(1,sizeof(AssocEstimates));
     
-    fscanf(finput,"%lf %lf %lf\n",sv_cluster_input,sv_width_input,sv_mass_corr_input);
+    fscanf(finput,"%lf %lf %lf\n",&sv_cluster_input,&sv_width_input,&sv_mass_corr_input);
     assocparms->cluster_size = sv_cluster_input;
     assocparms->log_cluster_size = log(sv_cluster_input);
     assocparms->cluster_width = sv_width_input;
@@ -383,7 +383,7 @@ int main(int argc,char *argv[])
     
     pv_assoc = calloc(1,sizeof(AssocProposals));
     
-    fscanf(finput,"%lf %lf %lf\n",pv_cluster_size, pv_cluster_width, pv_mass_corr);
+    fscanf(finput,"%lf %lf %lf\n",&pv_cluster_size,&pv_cluster_width,&pv_mass_corr);
     
     //name the output file for association parameters
     assocparms->popassoc_filename = (char *)calloc(40,sizeof(char *));
@@ -396,13 +396,13 @@ int main(int argc,char *argv[])
     //we need to create the patient level data info
     //we need to create the patient level estimates for trigger and response
     
-    fscanf(finput,"%lf %lf %lf %lf %lf\n",sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar);
-    fscanf(finput "%lf %lf %lf %lf\n",pv_pt_mass_input,pv_pt_width_input,pv_pt_base_input,pv_pt_hl_input);
-    fscanf(finput "%lf %lf %lf %lf %lf\n",pv_time_input,pv_mass_input,pv_width_input,pv_tscalemass_input, pv_tscalewidth_input);
+    fscanf(finput,"%lf %lf %lf %lf %lf\n",&sv_ptmass_input,&sv_ptwidth_input,&sv_ptbase_input,&sv_pthl_input,&sv_pt_modelerrorvar);
+    fscanf(finput "%lf %lf %lf %lf\n",&pv_pt_mass_input,&pv_pt_width_input,&pv_pt_base_input,&pv_pt_hl_input);
+    fscanf(finput "%lf %lf %lf %lf %lf\n",&pv_time_input,&pv_mass_input,&pv_width_input,&pv_tscalemass_input, &pv_tscalewidth_input);
     
-    fscanf(finput,"%lf %lf %lf %lf %lf\n",sv_ptmassresp_input,sv_ptwidthresp_input,sv_ptbaseresp_input,sv_pthlresp_input,sv_pt_respmodelerrorvar);
-    fscanf(finput "%lf %lf %lf %lf\n",pv_pt_massresp_input,pv_pt_widthresp_input,pv_pt_baseresp_input,pv_pt_hlresp_input);
-    fscanf(finput "%lf %lf %lf %lf %lf\n",pv_resptime_input,pv_respmass_input,pv_respwidth_input,pv_resptscalemass_input, pv_resptscalewidth_input);
+    fscanf(finput,"%lf %lf %lf %lf %lf\n",&sv_ptmassresp_input,&sv_ptwidthresp_input,&sv_ptbaseresp_input,&sv_pthlresp_input,&sv_pt_respmodelerrorvar);
+    fscanf(finput "%lf %lf %lf %lf\n",&pv_pt_massresp_input,&pv_pt_widthresp_input,&pv_pt_baseresp_input,&pv_pt_hlresp_input);
+    fscanf(finput "%lf %lf %lf %lf %lf\n",&pv_resptime_input,&pv_respmass_input,&pv_respwidth_input,&pv_resptscalemass_input, &pv_resptscalewidth_input);
     
     patientlist = initialize_subject();
     
