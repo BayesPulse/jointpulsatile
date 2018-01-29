@@ -72,13 +72,13 @@ Patient *initialize_subject(void)
     s->patient_parms = calloc(1,sizeof(PatientEstimates));
     s->resp_patient_parms = calloc(1,sizeof(PatientEstimates));
     s->patient_parms->pulselist = initialize_node();
-    s->resp_patient_parms->resppulselist = initialize_node();
+    s->resp_patient_parms->pulselist = initialize_node();
     
     s->patient_data = calloc(1,sizeof(PatientData));
     s->patient_pv = calloc(1,sizeof(PatientProposals));
     s->patient_pv_response = calloc(1,sizeof(PatientProposals));
     s->pulse_pv = calloc(1,sizeof(PulseProposals));
-    s->pulse_pv_response = calloc(1,sizeof(PulseProposals));
+    s->resp_pulse_pv = calloc(1,sizeof(PulseProposals));
     
   return s;
 }
@@ -106,7 +106,7 @@ PulseEstimates *initialize_node(void)
     p->width = 0.1;
     p->tvarscalemass = 1;
     p->tvarscalewidth = 1;
-    p->lambda =0;
+//    p->lambda =0;
   return p;
 }
 
@@ -130,9 +130,9 @@ PulseEstimates *initialize_node(void)
   None
 ************************************************************************/
 
-PulseEstimates *sequential_search(Pulse_Estimates *list,double time)
+PulseEstimates *sequential_search(PulseEstimates *list,double time)
 {
-  Pulse_Estimates *loc,*locm1;
+  PulseEstimates *loc,*locm1;
 
 /* searches through the linked list "list" for the first occassion of */
 /* "list->time" that is less than "time".                             */
@@ -166,7 +166,7 @@ PulseEstimates *sequential_search(Pulse_Estimates *list,double time)
   sequential_search: found in this file; identifies inputted pulse's predecessor
 ***********************************************************************/
 
-void insert_node(Pulse_Estimates *new_node,Pulse_Estimates *list)
+void insert_node(PulseEstimates *new_node,PulseEstimates *list)
 {
   Pulse_Estimates *node;
 
@@ -221,7 +221,7 @@ void insert_subject(Patient *new_subj,Patient *sublist)
   None
 ************************************************************************/
 
-void delete_node(Pulse_Estimates *node,Pulse_Estimates *list)
+void delete_node(PulseEstimates *node,PulseEstimates *list)
 {
   free(node->mean_contrib);
   
@@ -251,10 +251,10 @@ void delete_node(Pulse_Estimates *node,Pulse_Estimates *list)
   None
 ************************************************************************/
 
-void print_list(Pulse_Estimates *list)
+void print_list(PulseEstimates *list)
 {
   int i;
-  Pulse_Estimates *node;
+  PulseEstimates *node;
 
 /* traverses the linked list and prints the contents of each node */
   i = 1;
@@ -282,9 +282,9 @@ void print_list(Pulse_Estimates *list)
   None
 ************************************************************************/
 
-void destroy_list(Pulse_Estimates *list)
+void destroy_list(PulseEstimates *list)
 {
-  Pulse_Estimates *loc;
+  PulseEstimates *loc;
 
   while (list->succ != NULL) {
     loc = list->succ;
@@ -299,7 +299,7 @@ void destroy_list(Pulse_Estimates *list)
 void destroy_sublist(Patient *sublist)
 {
   Patient *loc;
-  void destroy_list(Pulse_Estimates *);
+  void destroy_list(PulseEstimates *);
 
   while (sublist->succ != NULL) {
       loc = sublist->succ;

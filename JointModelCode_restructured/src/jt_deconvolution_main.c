@@ -142,6 +142,8 @@ int main(int argc,char *argv[])
     
     unsigned long *seed;
     
+    double **ts, **ts_response;
+    
     PopulationPriors *popprior, *popprior_response;  //Data structures that hold the population prior settings from the user for trigger and response, respectively
   
     double PopMeanMassPrior_input, PopMeanMassPriorVar_input, PulseMassSDMax_input, PatientMeanMassSDMax_input; //user inputs to define trigger prior info for population mean mass and corresponding SD's
@@ -153,8 +155,8 @@ int main(int argc,char *argv[])
     
     double mean_cluster_input, var_cluster_input; //user inputs for mean and variance on the cluster size
     double mean_clusterwidth_input, var_clusterwidth_input; //user inputs for mean and variance on the cluster width
-    double mass_corr_beta_mean_input, mass_corr_beta_var_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
-    double svmean, svptsd, svsd; //user inputs for starting values of population level parameters
+    double mass_corr_alpha_input, mass_corr_beta_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
+    double svmean, svptsd, svsd; //user inputs for starting values
     
     AssocPriors *assocprior;
     AssocEstimates *assocparms;
@@ -167,8 +169,7 @@ int main(int argc,char *argv[])
     PopulationEstimates *popparms_response;
     PopulationProposal *pv_pop;
     PopulationProposal *pv_pop_response;
-    double pvmean, pvptsd, pvsd;
-    double svmean, svptsd, svsd;
+    double pvmean, pvptsd, pvsd; // user inputs for starting proposal variances    double svmean, svptsd, svsd;
     
     Patient *patientlist, *patient;
     double sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar;
@@ -178,6 +179,14 @@ int main(int argc,char *argv[])
     
     double pv_time_input,pv_mass_input,pv_width_input,pv_tscalemass_input, pv_tscalewidth_input; //user input for starting values of the proposal variance for the individual pulses.
     double pv_resptime_input,pv_respmass_input,pv_respwidth_input,pv_resptscalemass_input, pv_resptscalewidth_input; //user input for starting values of the proposal variance for the individual resp pulses.
+    
+//functions called in this function
+    double **read_data_file(char *,int *,int);
+    void destroy_sublist(Patient *);
+    Patient *initialize_subject(void);
+    void insert_subject(Patient *,Patient *);
+    
+  //  void mcmc(Subject_type *, Common_parms *, Common_parms *, double **, double **,long, int, Priors *, unsigned long *,char *,  char *, double[], Hyper_priors *);
     
 /*This assesses if there is an input filename with the program call*/
 
@@ -207,8 +216,8 @@ int main(int argc,char *argv[])
 /* read in the hormonal time series */
     Nobs = (int *)calloc(1,sizeof(int)); // define a dynamic variable for the number of observations on a subject
     
-    ts = read_data_file(datafile,Nobs,nsubj); // time series of the trigger hormone concentration.
-    ts_response = read_data_file(datafile_response,Nobs,nsubj); //time series of the response hormone concentration.
+    ts = read_data_file(datafile,Nobs,Nsubj); // time series of the trigger hormone concentration.
+    ts_response = read_data_file(datafile_response,Nobs,Nsubj); //time series of the response hormone concentration.
     fitend = ts[*Nobs-1][0]+ ts[1][0] * 4;  /*search 2 units farther in time: these set the boundaries for looking for pulse locations.*/
     fitstart = -ts[1][0] * 4;  /*search 4 units in the past*/
 
@@ -234,14 +243,14 @@ int main(int argc,char *argv[])
     
     
 /*Receive user input for the priors for the pulse widths (mean and variance of prior on mean and max on priors on SDs) and then set them in the Population Priors data structures */
-    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientWidthWidthSDMax_input);
+    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientMeanWidthSDMax_input);
     popprior->width_mean = PopMeanWidthPrior_input;
     popprior->width_variance = PopMeanWidthPriorVar_input;
     popprior->width_mean_SD_max = PatientMeanWidthSDMax_input;
     popprior->width_SD_max = PulseWidthSDMax_input;
     
     
-    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientMeanWdithSDMax_input);
+    fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanWidthPrior_input, &PopMeanWidthPriorVar_input, &PulseWidthSDMax_input, &PatientMeanWidthSDMax_input);
     popprior_response->width_mean = PopMeanWidthPrior_input;
     popprior_response->width_variance = PopMeanWidthPriorVar_input;
     popprior_response->width_mean_SD_max = PatientMeanWidthSDMax_input;
@@ -263,27 +272,27 @@ int main(int argc,char *argv[])
     
     
 /*Receive user input for the priors for baseline (mean and variance of prior on mean and max on priors on SD) and then set them in the Population Priors data structures */
-    fscanf(finput,"%lf %lf %lf\n",PopMeanBasePrior_input, PopMeanBasePriorVar_input, PatientBaseSDMax_input);
+    fscanf(finput,"%lf %lf %lf\n",&PopMeanBasePrior_input, &PopMeanBasePriorVar_input, &PatientBaseSDMax_input);
     popprior->baseline_mean = PopMeanBasePrior_input;
     popprior->baseline_variance = PopMeanBasePriorVar_input;
     popprior->baseline_SD_max = PatientBaseSDMax_input;
     
-    fscanf(finput,"%lf %lf %lf\n",PopMeanBasePrior_input, PopMeanBasePriorVar_input, PatientBaseSDMax_input);
+    fscanf(finput,"%lf %lf %lf\n",&PopMeanBasePrior_input, &PopMeanBasePriorVar_input, &PatientBaseSDMax_input);
     popprior_response->baseline_mean = PopMeanBasePrior_input;
     popprior_response->baseline_variance = PopMeanBasePriorVar_input;
     popprior_response->baseline_SD_max = PatientBaseSDMax_input;
     
     
 /*Receive user input for the priors for half-life (mean and variance of prior on mean and max on priors on SD) and then set them in the Population Priors data structures */
-    fscanf(finput,"%lf %lf %lf\n",PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input);
-    popprior->HLline_mean = PopMeanHLPrior_input;
-    popprior->HLline_variance = PopMeanHLPriorVar_input;
-    popprior->HLline_SD_max = PatientHLSDMax_input;
+    fscanf(finput,"%lf %lf %lf\n",&PopMeanHLPrior_input, &PopMeanHLPriorVar_input, &PatientHLSDMax_input);
+    popprior->halflife_mean = PopMeanHLPrior_input;
+    popprior->halflife_variance = PopMeanHLPriorVar_input;
+    popprior->halflife_SD_max = PatientHLSDMax_input;
     
-    fscanf(finput,"%lf %lf %lf\n",PopMeanHLPrior_input, PopMeanHLPriorVar_input, PatientHLSDMax_input);
-    popprior_response->HLline_mean = PopMeanHLPrior_input;
-    popprior_response->HLline_variance = PopMeanHLPriorVar_input;
-    popprior_response->HLline_SD_max = PatientHLSDMax_input;
+    fscanf(finput,"%lf %lf %lf\n",&PopMeanHLPrior_input, &PopMeanHLPriorVar_input, &PatientHLSDMax_input);
+    popprior_response->halflife_mean = PopMeanHLPrior_input;
+    popprior_response->halflife_variance = PopMeanHLPriorVar_input;
+    popprior_response->halflife_SD_max = PatientHLSDMax_input;
     
 /*Receive user input for the priors for the model error and set them in the Popultion Priors data structures */
     fscanf(finput,"%lf %lf\n",&alpha_input, &beta_input);

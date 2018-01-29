@@ -16,9 +16,8 @@ typedef struct node_tag{
     double width; /*pulse width: variance of the normal distribution of the pulse shape*/
     double tvarscalemass;  /*variance scale for mass t-dist*/
     double tvarscalewidth;   /*variance scal for width t-dist*/
-	double *mean_contrib; /*pulse level contribution to the integral of mean concentration
-	double lambda; /*for fsh pulse only, lambda, denomsum
-	                */  /***NOT SURE WHAT THIS TERM IS FOR***/
+	double *mean_contrib; /*pulse level contribution to the integral of mean concentration */
+	//double lambda; /*for fsh pulse only, lambda, denomsum*/  /***NOT SURE WHAT THIS TERM IS FOR***/
 } PulseEstimates;
 
 typedef struct {
