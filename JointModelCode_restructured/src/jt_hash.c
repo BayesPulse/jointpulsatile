@@ -69,16 +69,16 @@ Patient *initialize_subject(void)
   s->succ = s->pred = NULL;
   
 
-    s->patient_parms = calloc(1,sizeof(PatientEstimates));
-    s->resp_patient_parms = calloc(1,sizeof(PatientEstimates));
+    s->patient_parms = (PatientEstimates *)calloc(1,sizeof(PatientEstimates));
+    s->resp_patient_parms = (PatientEstimates *)calloc(1,sizeof(PatientEstimates));
     s->patient_parms->pulselist = initialize_node();
     s->resp_patient_parms->pulselist = initialize_node();
     
-    s->patient_data = calloc(1,sizeof(PatientData));
-    s->patient_pv = calloc(1,sizeof(PatientProposals));
-    s->patient_pv_response = calloc(1,sizeof(PatientProposals));
-    s->pulse_pv = calloc(1,sizeof(PulseProposals));
-    s->resp_pulse_pv = calloc(1,sizeof(PulseProposals));
+    s->patient_data = (PatientData *)calloc(1,sizeof(PatientData));
+    s->patient_pv = (PatientProposals *)calloc(1,sizeof(PatientProposals));
+    s->resp_patient_pv = (PatientProposals *)calloc(1,sizeof(PatientProposals));
+    s->pulse_pv = (PulseProposals *)calloc(1,sizeof(PulseProposals));
+    s->resp_pulse_pv = (PulseProposals *)calloc(1,sizeof(PulseProposals));
     
   return s;
 }
@@ -168,7 +168,7 @@ PulseEstimates *sequential_search(PulseEstimates *list,double time)
 
 void insert_node(PulseEstimates *new_node,PulseEstimates *list)
 {
-  Pulse_Estimates *node;
+  PulseEstimates *node;
 
 /* insert the node "new_node" in the linked list "list" */
 /* find the position in which to insert "new_node"      */
@@ -305,39 +305,38 @@ void destroy_sublist(Patient *sublist)
       loc = sublist->succ;
       destroy_list(sublist->patient_parms->pulselist);
       destroy_list(sublist->resp_patient_parms->pulselist);
-      free(patient_parms);
-      free(resp_patient_parms);
-      free(patient_data->concentration);
-      free(patient_data->time);
-      free(patient_data->response_concentration);
-      free(patient_data->common_filename);
-      free(patient_data->pulse_filename);
-      free(patient_data->resp_common_filename);
-      free(patient_data->resp_pulse_filename);
-      free(patient_data);
-      free(patient_pv);
-      free(patient_pv_response);
-      free(pulse_pv);
-      free(resp_pulse_pv);
+      free(sublist->patient_parms);
+      free(sublist->resp_patient_parms);
+      free(sublist->patient_data->concentration);
+      free(sublist->patient_data->time);
+      free(sublist->patient_data->response_concentration);
+      free(sublist->patient_data->common_filename);
+      free(sublist->patient_data->pulse_filename);
+      free(sublist->patient_data->resp_common_filename);
+      free(sublist->patient_data->resp_pulse_filename);
+      free(sublist->patient_data);
+      free(sublist->patient_pv);
+      free(sublist->resp_patient_pv);
+      free(sublist->pulse_pv);
+      free(sublist->resp_pulse_pv);
       free(sublist);
-    sublist = loc;
+      sublist = loc;
   }
     destroy_list(sublist->patient_parms->pulselist);
     destroy_list(sublist->resp_patient_parms->pulselist);
-    free(patient_parms);
-    free(resp_patient_parms);
-    free(patient_data->concentration);
-    free(patient_data->time);
-    free(patient_data->response_concentration);
-    free(patient_data->common_filename);
-    free(patient_data->pulse_filename);
-    free(patient_data->resp_common_filename);
-    free(patient_data->resp_pulse_filename);
-    free(patient_data);
-    free(patient_pv);
-    free(patient_pv_response);
-    free(pulse_pv);
-    free(resp_pulse_pv);
-
-  free(sublist);
+    free(sublist->patient_parms);
+    free(sublist->resp_patient_parms);
+    free(sublist->patient_data->concentration);
+    free(sublist->patient_data->time);
+    free(sublist->patient_data->response_concentration);
+    free(sublist->patient_data->common_filename);
+    free(sublist->patient_data->pulse_filename);
+    free(sublist->patient_data->resp_common_filename);
+    free(sublist->patient_data->resp_pulse_filename);
+    free(sublist->patient_data);
+    free(sublist->patient_pv);
+    free(sublist->resp_patient_pv);
+    free(sublist->pulse_pv);
+    free(sublist->resp_pulse_pv);
+    free(sublist);
 }

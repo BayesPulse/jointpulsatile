@@ -132,11 +132,12 @@ int main(int argc,char *argv[])
 /*****************************************/
 /***Variable defining***/
 /*****************************************/
-    int *Nobs,Nsubj, MCMCiter,Nthin, Nburnin, i;
+    int *Nobs,Nsubj, MCMCiter,Nthin, Nburnin, i, j;
     
-    char datafile[90];
-    char datafile_response[100];
+    char datafilename[90];
+    char datafilename_response[100];
     char fnameroot[100];
+    char patientnumb[5];
     
     FILE *fseed, *finput;
     
@@ -210,14 +211,14 @@ int main(int argc,char *argv[])
 /*Open the input file and read in the information*/
     finput = fopen(argv[1],"r");
 
-    fscanf(finput,"%s %s %s\n", datafile, datafile_response, fnameroot);  /*First line: datafile names for trigger and respones*/
+    fscanf(finput,"%s %s %s\n", datafilename, datafilename_response, fnameroot);  /*First line: datafile names for trigger and respones*/
     fscanf(finput,"%d %d %d %d\n", &Nsubj, &MCMCiter, &Nthin, &Nburnin);  /*third line: number of subject, number of iteration*/
 
 /* read in the hormonal time series */
     Nobs = (int *)calloc(1,sizeof(int)); // define a dynamic variable for the number of observations on a subject
     
-    ts = read_data_file(datafile,Nobs,Nsubj); // time series of the trigger hormone concentration.
-    ts_response = read_data_file(datafile_response,Nobs,Nsubj); //time series of the response hormone concentration.
+    ts = read_data_file(datafilename,Nobs,Nsubj); // time series of the trigger hormone concentration.
+    ts_response = read_data_file(datafilename_response,Nobs,Nsubj); //time series of the response hormone concentration.
     fitend = ts[*Nobs-1][0]+ ts[1][0] * 4;  /*search 2 units farther in time: these set the boundaries for looking for pulse locations.*/
     fitstart = -ts[1][0] * 4;  /*search 4 units in the past*/
 
@@ -225,8 +226,8 @@ int main(int argc,char *argv[])
     
 /*Receive user input for the priors for the pulse masses (mean and variance of prior on mean and max on priors on SDs) and then set them in the Population Priors data structure*/
     
-    popprior = calloc(1,sizeof(PopulationPriors));
-    popprior_response = calloc(1,sizeof(PopulationPriors));
+    popprior = (PopulationPriors *)calloc(1,sizeof(PopulationPriors));
+    popprior_response = (PopulationPriors *)calloc(1,sizeof(PopulationPriors));
     
     fscanf(finput,"%lf %lf %lf %lf\n", &PopMeanMassPrior_input, &PopMeanMassPriorVar_input, &PulseMassSDMax_input, &PatientMeanMassSDMax_input);
     popprior->mass_mean = PopMeanMassPrior_input;
@@ -306,7 +307,7 @@ int main(int argc,char *argv[])
     
 /**Read in the association parameters ***/
     
-    assocprior = calloc(1,sizeof(AssocPriors));
+    assocprior = (AssocPriors *)calloc(1,sizeof(AssocPriors));
     
     fscanf(finput,"%lf %lf\n",&mean_cluster_input, &var_cluster_input);
     fscanf(finput,"%lf %lf\n",&mean_clusterwidth_input, &var_clusterwidth_input);
@@ -321,8 +322,8 @@ int main(int argc,char *argv[])
     
 /**Read in the starting values for population parameters**/
     
-    popparms = calloc(1,sizeof(PopulationEstimates));
-    popparms_response = calloc(1,sizeof(PopulationEstimates));
+    popparms = (PopulationEstimates *)calloc(1,sizeof(PopulationEstimates));
+    popparms_response = (PopulationEstimates *)calloc(1,sizeof(PopulationEstimates));
     
     fscanf(finput,"%lf %lf %lf\n",&svmean,&svptsd,&svsd); // read in the mass starting values
     popparms->mass_mean = svmean;
@@ -361,12 +362,12 @@ int main(int argc,char *argv[])
     popparms_response->halflife_SD = svsd;
     
     //name the output file for trigger
-    popparms->pop_filename = (char *)calloc(40,sizeof(char *));
+    popparms->pop_filename = (char *)calloc(40,sizeof(char));
     strcpy(popparms->pop_filename,fnameroot);
     strcat(popparms->pop_filename,"_pop_trig.out");
     
     //name the output file for response
-    popparms_response->pop_filename = (char *)calloc(40,sizeof(char *));
+    popparms_response->pop_filename = (char *)calloc(40,sizeof(char));
     strcpy(popparms_response->pop_filename,fnameroot);
     strcat(popparms_response->pop_filename,"_pop_resp.out");
     
@@ -386,10 +387,10 @@ int main(int argc,char *argv[])
     fscanf(finput,"%lf %lf %lf\n",&pv_cluster_size,&pv_cluster_width,&pv_mass_corr);
     
     //name the output file for association parameters
-    assocparms->popassoc_filename = (char *)calloc(40,sizeof(char *));
+    assocparms->popassoc_filename = (char *)calloc(40,sizeof(char));
     strcpy(assocparms->popassoc_filename,fnameroot);
     strcat(assocparms->popassoc_filename,"_pop_assoc.out");
-    assocparms->popfile = fopen(assocparms->popassoc_filename,"w");
+    assocparms->popassocfile = fopen(assocparms->popassoc_filename,"w");
     
 
 /**Read in the starting values for patient level parameters**/
@@ -397,12 +398,12 @@ int main(int argc,char *argv[])
     //we need to create the patient level estimates for trigger and response
     
     fscanf(finput,"%lf %lf %lf %lf %lf\n",&sv_ptmass_input,&sv_ptwidth_input,&sv_ptbase_input,&sv_pthl_input,&sv_pt_modelerrorvar);
-    fscanf(finput "%lf %lf %lf %lf\n",&pv_pt_mass_input,&pv_pt_width_input,&pv_pt_base_input,&pv_pt_hl_input);
-    fscanf(finput "%lf %lf %lf %lf %lf\n",&pv_time_input,&pv_mass_input,&pv_width_input,&pv_tscalemass_input, &pv_tscalewidth_input);
+    fscanf(finput, "%lf %lf %lf %lf\n",&pv_pt_mass_input,&pv_pt_width_input,&pv_pt_base_input,&pv_pt_hl_input);
+    fscanf(finput, "%lf %lf %lf %lf %lf\n",&pv_time_input,&pv_mass_input,&pv_width_input,&pv_tscalemass_input, &pv_tscalewidth_input);
     
     fscanf(finput,"%lf %lf %lf %lf %lf\n",&sv_ptmassresp_input,&sv_ptwidthresp_input,&sv_ptbaseresp_input,&sv_pthlresp_input,&sv_pt_respmodelerrorvar);
-    fscanf(finput "%lf %lf %lf %lf\n",&pv_pt_massresp_input,&pv_pt_widthresp_input,&pv_pt_baseresp_input,&pv_pt_hlresp_input);
-    fscanf(finput "%lf %lf %lf %lf %lf\n",&pv_resptime_input,&pv_respmass_input,&pv_respwidth_input,&pv_resptscalemass_input, &pv_resptscalewidth_input);
+    fscanf(finput, "%lf %lf %lf %lf\n",&pv_pt_massresp_input,&pv_pt_widthresp_input,&pv_pt_baseresp_input,&pv_pt_hlresp_input);
+    fscanf(finput, "%lf %lf %lf %lf %lf\n",&pv_resptime_input,&pv_respmass_input,&pv_respwidth_input,&pv_resptscalemass_input, &pv_resptscalewidth_input);
     
     patientlist = initialize_subject();
     
@@ -411,10 +412,10 @@ int main(int argc,char *argv[])
         patient=initialize_subject();
         
         //fill patient data: create filenames, set data
-        patient->patient_data->common_filename = (char *)calloc(40,sizeof(char *));
-        patient->patient_data->pulse_filename = (char *)calloc(40,sizeof(char *));
-        patient->patient_data->resp_common_filename = (char *)calloc(40,sizeof(char *));
-        patient->patient_data->resp_pulse_filename = (char *)calloc(40,sizeof(char *));
+        patient->patient_data->common_filename = (char *)calloc(40,sizeof(char));
+        patient->patient_data->pulse_filename = (char *)calloc(40,sizeof(char));
+        patient->patient_data->resp_common_filename = (char *)calloc(40,sizeof(char));
+        patient->patient_data->resp_pulse_filename = (char *)calloc(40,sizeof(char));
 
         strcpy(patient->patient_data->common_filename,fnameroot);
         strcat(patient->patient_data->common_filename,"_ptparms_trig");
@@ -438,16 +439,16 @@ int main(int argc,char *argv[])
 
         patient->patient_data->number_of_obs = Nobs;
         patient->patient_data->avg_period_of_obs = ts[1][0];
-        patient->patient_data->duration_of_obs = (double)Nobs*ts[1][0];
+        patient->patient_data->duration_of_obs = ts[*Nobs - 1][0];
         
-        patient->patient_data->concentration = calloc(1,sizeof(Nobs));
-        patient->patient_data->time = calloc(1,sizeof(Nobs));
-        patient->patient_data->resp_concentration = calloc(1,sizeof(Nobs));
+        patient->patient_data->concentration = (double *)calloc(*Nobs,sizeof(double));
+        patient->patient_data->time = (double *)calloc(*Nobs,sizeof(double));
+        patient->patient_data->response_concentration = (double *)calloc(*Nobs,sizeof(double));
         
-        for (j=0;j<Nobs;j++) {
+        for (j=0;j<*Nobs;j++) {
             patient->patient_data->concentration[j] = ts[(i+1),j];
             patient->patient_data->time[j] = ts[0,j];
-            patient->patient_data->resp_concentration = ts_response[(i+1),j];
+            patient->patient_data->response_concentration = ts_response[(i+1),j];
         }
         
         //set starting values for patient estimates
@@ -461,7 +462,7 @@ int main(int argc,char *argv[])
         patient->resp_patient_parms->width_mean = sv_ptwidthresp_input;
         patient->resp_patient_parms->baseline = sv_ptbaseresp_input;
         patient->resp_patient_parms->halflife = sv_pthlresp_input;
-        patient->resp_ patient_parms->errorsq = sv_pt_respmodelerrorvar;
+        patient->resp_patient_parms->errorsq = sv_pt_respmodelerrorvar;
         
         //set initial proposal variances
         patient->patient_pv->pv_mass_mean = pv_pt_mass_input;
@@ -491,8 +492,8 @@ int main(int argc,char *argv[])
     }
 
     
-    pv_pop = calloc(1,sizeof(PopulationPriors));
-    pv_pop_response = calloc(1,sizeof(PopulationPriors));
+    pv_pop = (PopulationProposal *)calloc(1,sizeof(PopulationProposal));
+    pv_pop_response = (PopulationProposal *)calloc(1,sizeof(PopulationProposal));
     
     fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the mass starting proposal variances
     pv_pop->pv_mass_mean = pvmean;

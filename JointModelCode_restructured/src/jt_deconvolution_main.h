@@ -57,7 +57,7 @@ typedef struct {
     double *concentration;
     double *time;
     double *response_concentration;
-    int number_of_obs;
+    int *number_of_obs;
     double avg_period_of_obs;  /**in minutes**/
     double duration_of_obs;  /**in minutes**/
     
@@ -81,7 +81,7 @@ typedef struct patient_tag {
     PatientEstimates *resp_patient_parms;
     PatientData *patient_data;
     PatientProposals *patient_pv;
-    PatientProposals *patient_pv_response;
+    PatientProposals *resp_patient_pv;
     PulseProposals *pulse_pv;
     PulseProposals *resp_pulse_pv;
     
