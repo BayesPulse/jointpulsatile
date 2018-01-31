@@ -446,9 +446,9 @@ int main(int argc,char *argv[])
         patient->patient_data->response_concentration = (double *)calloc(*Nobs,sizeof(double));
         
         for (j=0;j<*Nobs;j++) {
-            patient->patient_data->concentration[j] = ts[(i+1),j];
-            patient->patient_data->time[j] = ts[0,j];
-            patient->patient_data->response_concentration = ts_response[(i+1),j];
+            patient->patient_data->concentration[j] = ts[j][(i+2)];
+            patient->patient_data->time[j] = ts[j][0];
+            patient->patient_data->response_concentration[j] = ts_response[j][(i+2)];
         }
         
         //set starting values for patient estimates
