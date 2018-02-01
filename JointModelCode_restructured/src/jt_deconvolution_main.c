@@ -213,7 +213,7 @@ int main(int argc,char *argv[])
 
     fscanf(finput,"%s %s %s\n", datafilename, datafilename_response, fnameroot);  /*First line: datafile names for trigger and respones*/
     fscanf(finput,"%d %d %d %d\n", &Nsubj, &MCMCiter, &Nthin, &Nburnin);  /*third line: number of subject, number of iteration*/
-
+ 
 /* read in the hormonal time series */
     Nobs = (int *)calloc(1,sizeof(int)); // define a dynamic variable for the number of observations on a subject
     
@@ -446,9 +446,9 @@ int main(int argc,char *argv[])
         patient->patient_data->response_concentration = (double *)calloc(*Nobs,sizeof(double));
         
         for (j=0;j<*Nobs;j++) {
-            patient->patient_data->concentration[j] = ts[j][(i+2)];
+            patient->patient_data->concentration[j] = ts[j][(i+1)];
             patient->patient_data->time[j] = ts[j][0];
-            patient->patient_data->response_concentration[j] = ts_response[j][(i+2)];
+            patient->patient_data->response_concentration[j] = ts_response[j][(i+1)];
         }
         
         //set starting values for patient estimates
