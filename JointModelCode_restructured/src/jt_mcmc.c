@@ -40,90 +40,95 @@ void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *po
 //		parms_l->iter = i;
 
 
-//Draw population mean parameters for pulses: mua and muw
-		/* draw fixed effects priors; mua and muw,the population mean*/
+//Draw population mean parameters for mean pulse mass and width: mua and muw
 
-		draw_pop_mass_mean(sublist, priors, parms_f, seed, hyper);
-		draw_fe_prior_w_mean(sublist, priors, parms_f, seed, hyper);
+		draw_pop_mass_mean(sublist, priors, parms_f, seed, hyper);   //for trigger
+        draw_pop_width_mean(sublist, priors, parms_f, seed, hyper);  //for trigger
 
+// Draw patient-to-patient SD in pulse mass and width means sma and smw  //check that drawing SD and not variance
 
+		draw_pop_mass_mean_SD(sublist, priors, parms_f, seed, hyper);
+		draw_pop_width_mean_SD(sublist, priors, vfewv_l, vfewv_f, seed, hyper);
 
-		/* draw fixed effects prior variances; sma and smw*/
+// Draw population mean baseline and halflife; mub and muh*/
 
-		draw_fe_prior_a_var(sublist, priors, parms_f, seed, hyper);
-		draw_fe_priors_w_var(sublist, priors, vfewv_l, vfewv_f, seed, hyper);  /*proposal variance */
+		draw_pop_base_mean(sublist, priors, parms_f, seed, hyper);  //do for trigger
+        draw_pop_hl_mean(sublist, priors, parms_f, seed, hyper);
+		draw_pop_base_mean(sublist, priors, parms_l, seed, hyper);  //do for response
+        draw_pop_hl_mean(sublist, priors, parms_f, seed, hyper);
+        
+// draw patient-to-patient SD in baseline and halflife; sb and sh  //why drawn together??
 
-		/* draw mean baseline and halflife; mub and muh*/
+		draw_pop_base_SD(sublist, priors, vfebv_l, vfehv_l, seed, hyper); //do for trigger
+        draw_pop_hl_SD(sublist, priors, vfebv_l, vfehv_l, seed, hyper);
+		draw_pop_base_SD(sublist, priors, vfebv_f, vfehv_f, seed, hyper);  //do for response
+        draw_pop_hl_SD(sublist, priors, vfebv_l, vfehv_l, seed, hyper);
 
-		draw_bh_mean_f(sublist, priors, parms_f, seed, hyper);
-		draw_bh_mean_l(sublist, priors, parms_l, seed, hyper);
+// draw subject specific means; muak and muwk*/
 
-		///* draw variance for baseline and halflife; sb and sh*/
-
-		draw_bh_var_l(sublist, priors, vfebv_l, vfehv_l, seed, hyper);
-		draw_bh_var_f(sublist, priors, vfebv_f, vfehv_f, seed, hyper);
-
-		/////* draw subject specific means; muak and muwk*/
-
-		draw_fixed_mass(sublist, priors, parms_l, parms_f, seed, pmean_var);
-		draw_fixed_width_l(sublist, priors, parms_l, vfepw_l, seed);
-		draw_fixed_width_f(sublist, priors, parms_f, vfepw_f, seed);
-
-		/* draw mass and width variances; sa and sw*/
-
-		draw_fe_precision_l(sublist, priors, parms_l, vfepmv_l, vfepwv_l, seed);
-		draw_fe_precision_f(sublist, priors, parms_f, vfepmv_f, vfepwv_f, seed);
-
-		birth_death_l(sublist, ts_l, parms_l, N, seed, i);
-		//
+        draw_patient_mass_means(sublist, priors, parms_l, parms_f, seed, pmean_var); //jt draw for trigger&response
+        draw_patient_width_mean(sublist, priors, parms_l, vfepw_l, seed);  //for trigger
+        draw_patient_width_mean(sublist, priors, parms_f, vfepw_f, seed); //for response
 		
-			draw_times_l(sublist, parms_l, ts_l,
-				N, seed, vtime_l);
-		
-			////////
-			//draw_times_old(tsublist, tparms_l, ts_l,
-			//	N, seed, vtime_l);
-			draw_random_effects_l(ts_l, sublist, parms_l, N, vrem_l, vrew_l, seed);
-			draw_eta_l(sublist, parms_l, seed, veta_l);
+// draw pulse-to-pulse mass and width SD's; sa and sw*/
+
+		draw_patient_mass_SD(sublist, priors, parms_l, vfepmv_l, vfepwv_l, seed); //for trigger
+		draw_patient_mass_SD(sublist, priors, parms_f, vfepmv_f, vfepwv_f, seed); //for response
+
+		birth_death_trigger(sublist, ts_l, parms_l, N, seed, i);
+
+// draw trigger pulse times
+        draw_times(sublist, parms_l, ts_l,N, seed, vtime_l);
+
+// draw individual pulse masses and widths for trigger
+        draw_pulse_mass(ts_l, sublist, parms_l, N, vrem_l, vrew_l, seed);
+        draw_pulse_width(ts_l, sublist, parms_l, N, vrem_l, vrew_l, seed);)
+        draw_tscalemass(sublist, parms_l, seed, veta_l);
+        draw_tscalewidth(sublist, parms_l, seed, veta_l);
 			
-
-		draw_bh_l(sublist, parms_l, priors, ts_l,
-			N, seed, pmd_var_l);
-		//////
-
-		/////* draw pulse locations; tauki*/
-		birth_death_f(sublist, ts_f, parms_f, parms_l, N, seed, i);
-		////draw_times_old_f(tsublist, tparms_f, ts_f,
-		////	N, seed, vtime_f);
-		
-		draw_times_f(sublist, parms_f, parms_l, ts_f,
-			N, seed, vtime_f);
-		draw_eta_f(sublist, parms_f, seed, veta_f);
+// draw patient level baseline and width for trigger
+        draw_patient_base(sublist, parms_l, priors, ts_l,N, seed, pmd_var_l);
+		draw_patient_hl(sublist, parms_l, priors, ts_l,N, seed, pmd_var_l);
 	
-		//
-		draw_random_effects_f(ts_f, sublist, parms_f, N, vrem_f, vrew_f, seed);
 
-		draw_bh_f(sublist, parms_f, priors, ts_f,
+// draw pulse locations for reponse; tauki*/
+		birth_death_response(sublist, ts_f, parms_f, parms_l, N, seed, i);
+
+//draw times for response
+        
+		draw_times(sublist, parms_f, parms_l, ts_f,
+			N, seed, vtime_f);
+		draw_tscalemass(sublist, parms_f, seed, veta_f);
+        draw_tscalewidth(sublist, parms_f, seed, veta_f);
+	
+// draw individual pulse masses and widths for the response
+		draw_pulse_mass(ts_f, sublist, parms_f, N, vrem_f, vrew_f, seed);
+        draw_pulse_width(ts_f, sublist, parms_f, N, vrem_f, vrew_f, seed);
+        
+//draw patient level baseline and halflife
+		draw_patient_base(sublist, parms_f, priors, ts_f,
 			N, seed, pmd_var_f);
+        draw_patient_hl(sublist, parms_f, priors, ts_f,
+                          N, seed, pmd_var_f);
 
-
-		/////* draw pulse mass and width; Aki and s2pki*/
+//draw cox model parameters
 
 		
-		mh_logalphamean(sublist, parms_l, priors, seed, vrho);
-		mh_logsigmean(sublist, parms_l, priors, seed, vnu);
+		mh_logclustersize(sublist, parms_l, priors, seed, vrho);
+		mh_logclusterwidth(sublist, parms_l, priors, seed, vnu);
 
 
 		/* draw model error; s2e*/
-		ssq_l = error_squared_l(ts_l, sublist, parms_l, N);
+		ssq_l = error_squared(ts_l, sublist, parms_l, N);  //for trigger
 		parms_l->sigma = inverse_gamma(priors->alpha_l + (parms_l->numsub*N) / 2, priors->beta_l + 0.5*ssq_l, seed);
 		parms_l->lsigma = log(parms_l->sigma);
-		ssq_f = error_squared_l(ts_f, sublist, parms_f, N);
+		ssq_f = error_squared(ts_f, sublist, parms_f, N); //for response
 		parms_f->sigma = inverse_gamma(priors->alpha_f + (parms_f->numsub*N) / 2, priors->beta_f + 0.5*ssq_f, seed);
 		parms_f->lsigma = log(parms_f->sigma);
 
 		fflush(stdout);
         
+//STOPPED HERE
         /**FIX HERE!!**/
 /**        if iteration == 50 or 5000 do write out loops
         write_mcmc_output(MAKE A NEW FUNCTION FOUND IN WRITE_MCMC_OUTPUT.C) **/
