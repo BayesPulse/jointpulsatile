@@ -42,7 +42,7 @@ void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *po
 
 //Draw population mean parameters for mean pulse mass and width: mua and muw
 
-		draw_pop_mass_mean(sublist, priors, parms_f, seed, hyper);   //for trigger
+		draw_pop_mass_mean(patientlist, popparms, popparms_response, popprior, popprior_response, seed);   //for trigger and response jointly
         draw_pop_width_mean(sublist, priors, parms_f, seed, hyper);  //for trigger
 
 // Draw patient-to-patient SD in pulse mass and width means sma and smw  //check that drawing SD and not variance

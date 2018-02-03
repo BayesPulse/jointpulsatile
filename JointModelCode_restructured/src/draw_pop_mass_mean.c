@@ -1,5 +1,5 @@
 /*******************************************************************/
-/*************************draw_fe_prior_a_mean.c *******************/
+/*************************draw_pop_mass_mean.c *******************/
 /*******************************************************************/
 
 /***fix here***/
@@ -8,10 +8,10 @@
 #include "jt_mcmc.h"
 
 /*********************************************************************/
-/*START OF draw_fe_prior_a_mean SUBROUTINE*/
+/*START OF draw_pop_mass_mean SUBROUTINE*/
 /*********************************************************************/
 /*********************************************************************/
-/*draw_fe_priors: this runs the Gibbs sampler draw for overall mean mass and width through all subjects;
+/*draw_pop_mass_mean: this is a metropolis-hastings draw of the both population mean pulse masses
 	ARGUMENTS: Subject_type *sublist; this is the current list of subjects;
 	Priors *priors; the current values of the prior parameters;
 	Common_parms *parms; the current values of the common parameters;
@@ -33,6 +33,7 @@
  kiss: found in randgen.h; draws from U(0,1) distribution
 **************************************************************************/
 
+ void draw_pop_mass_mean(patientlist, popparms, popparms_response, popprior, popprior_response, seed);
 void draw_fe_prior_a_mean(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper)
 {
 	/* declare variables */
