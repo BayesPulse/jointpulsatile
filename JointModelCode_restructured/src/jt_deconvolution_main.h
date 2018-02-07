@@ -130,6 +130,7 @@ typedef struct{
     double cluster_width; /*cluster width (nu) in the cox process for the respose hormone intensity*/
     double log_cluster_width;
     double mass_corr;
+    double popprior_mass_corr;
 
     char *popassoc_filename; /* output filename of the association parameters*/
     FILE *popassocfile; /* file of the association parameters*/
@@ -140,6 +141,7 @@ typedef struct{
     double pv_clustersize;
     double pv_clusterwidth;
     double pv_masscorr;
+    double pv_massmatrix[2][2]; //This is proposal for the population pulse masses
 } AssocProposals;
 
 /*The user defined values for the priors on the population level parameters*/

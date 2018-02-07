@@ -33,91 +33,110 @@
  kiss: found in randgen.h; draws from U(0,1) distribution
 **************************************************************************/
 
- void draw_pop_mass_mean(patientlist, popparms, popparms_response, popprior, popprior_response, seed);
-void draw_fe_prior_a_mean(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper)
+void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, PopulationEstimate *popparms_response, PopulationPrior *popprior, PopulationPrior *popprior_response, AssocEstimates *assocparms, PopulationProposal *pv_assoc, int Nsubj, unsigned long *seed);
+//void draw_fe_prior_a_mean(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper)
 {
 	/* declare variables */
 
-	Subject_type *subject;
+	Patient *patient;
 
-	int i, j, nsubj,flag;
-	double sum_lmass[2], **fcond_var, **fcond_var_inv, temp_cond_mean[2], *cond_mean, temp[2];
-	int rmvnorm(double *, double **, int, double *, unsigned long *, int);
-
-
-	/*declare functions */
-	double rnorm(double, double, unsigned long *);
-	double kiss(unsigned long *);
-	int cholesky_decomp(double **, int);
-	double **cholesky_invert(int, double **);
-	/* set up space for dynamically allocated variables */
-	fcond_var = (double **)calloc(2, sizeof(double *));
-	fcond_var_inv = (double **)calloc(2, sizeof(double *));
-	cond_mean = (double *)calloc(2, sizeof(double));
+	int i, j;
+	double sum_mass[2], *current_means, proposalmeans[2], **patient_mass_var, **patient_mass_var_inv;
+    double sum_norm_int_numerator, sum_norm_int_denominator, **prior_mass_var, **prior_mass_var_inv;
+ 
+	patient_mass_var = (double **)calloc(2, sizeof(double *));
+	patient_mass_var_inv = (double **)calloc(2, sizeof(double *));
+	current_means = (double *)calloc(2, sizeof(double));
 	for (i = 0; i < 2; i++) {
-		fcond_var[i] = (double *)calloc(2, sizeof(double));
-		fcond_var_inv[i] = (double *)calloc(2, sizeof(double));
+		patient_mass_var[i] = (double *)calloc(2, sizeof(double));
+        patient_mass_var_inv[i] = (double *)calloc(2, sizeof(double));
 	}
-	nsubj = parms_f->numsub;
-	/* sum the current log masses */
-	sum_lmass[0] = 0;
-	sum_lmass[1] = 0;
+    
+//Draw the proposal
+    current_means[0] = popparms->mass_mean;
+    current_means[1] = popparms_response->mass_mean;
+    rmvnorm(proposalmeans, pv_assoc->massmatrix, 2, current_means, seed, 1);
 
+    if (proposalmeans[0]> & proposalmeans[1]>0) {
+//Compute the ratio of "likelihoods"
+    
+        //Step 1: set current patient level mass matrix: it is stored as SD's and a correlation for estimation
+        patient_mass_var[0][0] = popparms->mass_SD * popparms->mass_SD;
+        patient_mass_var[1][1] = popparms_response->mass_SD * popparms_response->mass_SD;
+        patient_mass_var[0][1] = patient_mass_var[1][0] = assocparms->mass_corr * popparms->mass_SD * popparms_response->mass_SD;
+   
+        //Step 2: invert the patient level mass matrix.
+        if (!cholesky_decomp(patient_mass_var,2)) {
+            printf("prior variance matrix not PSD matrix\n");
+            exit(0);
+        }
+        patient_mass_var_inv = cholesky_invert(2, patient_mass_var);
+    
+        //sum exponent in the bivariate normal likelihood: distribution of the patient level pulse mass means
+        sum_numerator = 0;
+        sum_denominator = 0;
+        sum_norm_int_numerator = 0;
+        sum_norm_int_denominator = 0;
 
-	/*priors->fe_precision[0][0] = 5.263;
-	priors->fe_precision[1][1] = 5.263;
-	priors->fe_precision[0][1] = priors->fe_precision[1][0] = -4.737;*/
+        patient = patientlist->succ;
 
+        /*This while loop goes through the pulses to get the sum involved*/
+        while (patient != NULL){
+            sum_numerator += (patient->patient_parms->mass_mean - proposalmeans[0]) * patient_mass_var_inv[0][0] * (patient->patient_parms->mass_mean - proposalmeans[0]);
+            sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[1][0] * (patient->patient_parms->mass_mean - proposalmeans[0]);
+            sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[0][1] * (patient->patient_parms->mass_mean - proposalmeans[0]);
+            sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[1][1] * (patient->resp_patient_parms->mass_mean - proposalmeans[1]);
+            sum_norm_int_numerator += NEED log MVN CDF;
+        
+            sum_denominator += (patient->patient_parms->mass_mean - popparms->mass_mean) * patient_mass_var_inv[0][0] * (patient->patient_parms->mass_mean - popparms->mass_mean);
+            sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[1][0] * (patient->patient_parms->mass_mean - popparms->mass_mean);
+            sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[0][1] * (patient->patient_parms->mass_mean - popparms->mass_mean);
+            sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[1][1] * (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean);
+            sum_norm_int_denominator += NEED log MNV CDF;
+        
+            patient = patientlist->succ;
+        } /*end of loop through pulses*/
+	
+        likelihood_ratio = 0.5 * sum_numerator - sum_norm_int_numerator - 0.5 * sum_denominator + sum_norm_int_denominator;
+        
+        //Compute the prior_ratio.
+        //Set current population level mass matrix: it is stored as SD's and a correlation for estimation
+        //NOT FIXED HERE. WHAT ABOUT CORRELATED PRIOR.
+        patient_mass_var[0][0] = popparms->mass_SD * popparms->mass_SD;
+        patient_mass_var[1][1] = popparms_response->mass_SD * popparms_response->mass_SD;
+        patient_mass_var[0][1] = patient_mass_var[1][0] = assocparms->mass_corr * popparms->mass_SD * popparms_response->mass_SD;
+        
+        //Step 2: invert the patient level mass matrix.
+        if (!cholesky_decomp(patient_mass_var,2)) {
+            printf("prior variance matrix not PSD matrix\n");
+            exit(0);
+        }
+        patient_mass_var_inv = cholesky_invert(2, patient_mass_var);
+        prior_numerator = 0;
+        prior_denominator = 0;
+        prior_int_numerator = 0;
+        prior_int_denominator = 0;
+        
+        prior_numerator += (proposalmeans[0] - popprior->mass_mean) * patient_mass_var_inv[0][0] * (patient->patient_parms->mass_mean - proposalmeans[0]);
+        prior_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[1][0] * (patient->patient_parms->mass_mean - proposalmeans[0]);
+        sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[0][1] * (patient->patient_parms->mass_mean - proposalmeans[0]);
+        sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[1][1] * (patient->resp_patient_parms->mass_mean - proposalmeans[1]);
+        sum_norm_int_numerator += NEED log MVN CDF;
+        
+        sum_denominator += (patient->patient_parms->mass_mean - popparms->mass_mean) * patient_mass_var_inv[0][0] * (patient->patient_parms->mass_mean - popparms->mass_mean);
+        sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[1][0] * (patient->patient_parms->mass_mean - popparms->mass_mean);
+        sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[0][1] * (patient->patient_parms->mass_mean - popparms->mass_mean);
+        sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[1][1] * (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean);
+        prior_ratio = PUT IN;
 
-
-	subject = sublist->succ;
-
-	/*This while loop goes through the pulses to get the sum involved*/
-	while (subject != NULL){
-		sum_lmass[0] += subject->theta_l[0]; /*sum of lh mean*/
-		sum_lmass[1] += subject->theta_f[0];  /*sum of fsh mean*/
-		subject = subject->succ;
-	} /*end of loop through pulses*/
-	for (i = 0; i < 2; i++)
-	for (j = 0; j < 2; j++)
-		fcond_var_inv[i][j] = (double)nsubj * priors->fe_precision[i][j] + hyper->prec[i][j]; /*the inverse*/
-
-	if (!cholesky_decomp(fcond_var_inv, 2)) {
-		printf("fcond_var_inv is not PSD matrix\n");
-		exit(0);
-	}
-	/* invert to get the variance matrix.  This is needed for the mean calculation */
-	/* and for the draw of the MVN distribution                                                 */
-	fcond_var = cholesky_invert(2, fcond_var_inv);
-	/* calculate the means of the full cond. Bivariate normal distn */
-	for (i = 0; i < 2; i++) {
-		temp_cond_mean[i] = 0;
-
-		temp_cond_mean[i] += hyper->prec[i][0] * hyper->hmean_l[0] + hyper->prec[i][1] * hyper->hmean_f[0];
-		temp_cond_mean[i] += priors->fe_precision[i][0] * sum_lmass[0] + priors->fe_precision[i][1] * sum_lmass[1];
-
-	}
-
-	for (i = 0; i < 2; i++) {
-		cond_mean[i] = 0;
-		for (j = 0; j < 2; j++)
-			cond_mean[i] += fcond_var[i][j] * temp_cond_mean[j];
-	}
-
-	/*draw the new means*/
-	flag =0;
-	while (flag == 0){
-		rmvnorm(temp, fcond_var, 2, cond_mean, seed, 1);
-		if (temp[0]>0 && temp[1]>0)
-			flag = 1;
-	}
-	priors->fe_mean_l[0] = temp[0];
-	priors->fe_mean_f[0] = temp[1];
-	for (i = 0; i < 2; i++) {
-		free(fcond_var[i]);
-		free(fcond_var_inv[i]);
-	}
-	free(fcond_var);
+//NEED TO ADD MH DECISION LOOP HERE
+        
+    }
+    for (i = 0; i < 2; i++) {
+        free(fcond_var[i]);
+        free(fcond_var_inv[i]);
+    }
+    free(fcond_var);
 	free(fcond_var_inv);
 	free(cond_mean);
 }

@@ -157,7 +157,7 @@ int main(int argc,char *argv[])
     double mean_cluster_input, var_cluster_input; //user inputs for mean and variance on the cluster size
     double mean_clusterwidth_input, var_clusterwidth_input; //user inputs for mean and variance on the cluster width
     double mass_corr_alpha_input, mass_corr_beta_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
-    double svmean, svptsd, svsd; //user inputs for starting values
+    double svmean, svcorr, svptsd, svsd; //user inputs for starting values
     
     AssocPriors *assocprior;
     AssocEstimates *assocparms;
@@ -170,7 +170,7 @@ int main(int argc,char *argv[])
     PopulationEstimates *popparms_response;
     PopulationProposal *pv_pop;
     PopulationProposal *pv_pop_response;
-    double pvmean, pvptsd, pvsd; // user inputs for starting proposal variances    double svmean, svptsd, svsd;
+    double pvmean, pvcorr, pvmeanresp,pvptsd, pvsd; // user inputs for starting proposal variances    double svmean, svptsd, svsd;
     
     Patient *patientlist, *patient;
     double sv_ptmass_input,sv_ptwidth_input,sv_ptbase_input,sv_pthl_input,sv_pt_modelerrorvar;
@@ -373,7 +373,7 @@ int main(int argc,char *argv[])
     
 /***Read in the starting values for the association parameters***/
     
-    assocparms = calloc(1,sizeof(AssocEstimates));
+    assocparms = (AssocEstimates *)calloc(1,sizeof(AssocEstimates));
     
     fscanf(finput,"%lf %lf %lf\n",&sv_cluster_input,&sv_width_input,&sv_mass_corr_input);
     assocparms->cluster_size = sv_cluster_input;
@@ -382,9 +382,12 @@ int main(int argc,char *argv[])
     assocparms->log_cluster_width = log(sv_width_input);
     assocparms->mass_corr = sv_mass_corr_input;
     
-    pv_assoc = calloc(1,sizeof(AssocProposals));
+    pv_assoc = (AssocProposals *)calloc(1,sizeof(AssocProposals));
     
     fscanf(finput,"%lf %lf %lf\n",&pv_cluster_size,&pv_cluster_width,&pv_mass_corr);
+    pv_assoc->pv_cluster_size = pv_cluster_size;
+    pv_assoc->pv_cluster_width = pv_cluster_width;
+    pv_assoc->pv_mass_corr = pv_mass_corr;
     
     //name the output file for association parameters
     assocparms->popassoc_filename = (char *)calloc(40,sizeof(char));
@@ -500,10 +503,13 @@ int main(int argc,char *argv[])
     pv_pop->pv_mass_SD = pvptsd;
     pv_pop->pv_mass_mean_SD = pvsd;
     
-    fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the mass starting proposal variances for the response
+    fscanf(finput,"%lf %lf %lf\n",&pvmeanresp,&pvcorr,&pvptsd,&pvsd); // read in the mass starting proposal variances for the response
     pv_pop_response->pv_mass_mean = pvmean;
     pv_pop_response->pv_mass_SD = pvptsd;
     pv_pop_response->pv_mass_mean_SD = pvsd;
+    pv_assoc->pv_massmatrix[0][0] = pvmean * pvmean;
+    pv_assoc->pv_massmatrix[1][1] = pvmeanresp * pvmeanresp;
+    pv_assoc->pv_massmatrix[0][1] = pv_assoc->pv_massmatrix[1][0] = pvcorr * pvmean * pvmeanresp;
     
     fscanf(finput,"%lf %lf %lf\n",&pvmean,&pvptsd,&pvsd); // read in the width starting proposal variance
     pv_pop->pv_width_mean = pvmean;

@@ -10,9 +10,8 @@
 extern double M;
 
 //Start of the function: Needs updating
-//void mcmc(Subject_type *sublist, Common_parms *parms_l, Common_parms *parms_f, double **ts_l, double **ts_f, int MCMCiter, int N,
-	Priors *priors, unsigned long *seed, char *filel, char *file2, double propvar[], Hyper_priors *hyper)
-void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *popprior_response, PopulationEstimates *popparms, PopulationEstimates *popparms_response,
+//void mcmc(Subject_type *sublist, Common_parms *parms_l, Common_parms *parms_f, double **ts_l, double **ts_f, int MCMCiter, int N,Priors *priors, unsigned long *seed, char *filel, char *file2, double propvar[], Hyper_priors *hyper)
+void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *popprior_response, PopulationEstimates *popparms, PopulationEstimates *popparms_response,int Nsubj,
 {
 	int i, j, k, l, num_node, num_node2, NN = 50, NNN = 5000;
     double vfepmv_l, **sigma_p, vfepwv_l, vrem_l, vrew_l, vfemv_l, vfepw_l, vnu, vrho, vfepw_f, vfewv_l;
@@ -42,7 +41,7 @@ void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *po
 
 //Draw population mean parameters for mean pulse mass and width: mua and muw
 
-		draw_pop_mass_mean(patientlist, popparms, popparms_response, popprior, popprior_response, seed);   //for trigger and response jointly
+		draw_pop_mass_mean(patientlist, popparms, popparms_response, popprior, popprior_response, poprior, popprior_response, pv_assoc, Nubj,seed);   //for trigger and response jointly
         draw_pop_width_mean(sublist, priors, parms_f, seed, hyper);  //for trigger
 
 // Draw patient-to-patient SD in pulse mass and width means sma and smw  //check that drawing SD and not variance
