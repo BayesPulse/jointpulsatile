@@ -57,7 +57,8 @@ void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, Popu
     current_means[1] = popparms_response->mass_mean;
     rmvnorm(proposalmeans, pv_assoc->massmatrix, 2, current_means, seed, 1);
 
-    if (proposalmeans[0]> & proposalmeans[1]>0) {
+    if (proposalmeans[0]>0 & proposalmeans[1]>0) {
+        
 //Compute the ratio of "likelihoods"
     
         //Step 1: set current patient level mass matrix: it is stored as SD's and a correlation for estimation
@@ -99,7 +100,7 @@ void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, Popu
 	
         likelihood_ratio = 0.5 * sum_numerator - sum_norm_int_numerator - 0.5 * sum_denominator + sum_norm_int_denominator;
         
-        //Compute the prior_ratio.
+//Compute the prior_ratio.
         //Set current population level mass matrix: it is stored as SD's and a correlation for estimation
         //NOT FIXED HERE. WHAT ABOUT CORRELATED PRIOR.
         patient_mass_var[0][0] = popparms->mass_SD * popparms->mass_SD;
