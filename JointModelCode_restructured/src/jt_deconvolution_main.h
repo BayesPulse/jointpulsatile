@@ -27,6 +27,17 @@ typedef struct {
     double pv_tscalemass;
     double pv_tscalewidth;
     
+    int Naccept_pulse_mass;
+    int N_pulse_mass;
+    int Naccept_pulse_width;
+    int N_pulse_width;
+    int Naccept_pulse_location;
+    int N_pulse_location;
+    int Naccept_tscalemass;
+    int N_tscalemass;
+    int Naccept_tscalewidth;
+    int N_tscalewidth;
+    
 } PulseProposals;
 
 /****This structure contains the patient level parameters***/
@@ -44,12 +55,22 @@ typedef struct {
     
 } PatientEstimates;
 
-/****This structure contains the patient level proposal variances***/
+/****This structure contains the patient level proposal variances and the acceptance probabilities***/
 typedef struct {
     double pv_baseline;
     double pv_halflife;
     double pv_mass_mean;
     double pv_width_mean;
+    
+    int Naccept_baseline;
+    int N_baseline;
+    int Naccept_halflife;
+    int N_halflife;
+    int Naccept_mass_mean;
+    int N_mass_mean;
+    int Naccept_width_mean;
+    int N_width_mean;
+    
 } PatientProposals;
 
 typedef struct {
@@ -110,6 +131,7 @@ typedef struct{
     
 } PopulationEstimates;
 
+//Proposal variances and MH acceptance probability components.  These will go away with integration with pop model package.
 typedef struct {
     double pv_baseline_mean;
     double pv_HL_mean;
@@ -121,6 +143,28 @@ typedef struct {
     double pv_width_SD;
     double pv_mass_mean_SD;
     double pv_width_mean_SD;
+    
+    int Naccept_baseline_mean;
+    int N_baseline_mean;
+    int Naccept_HL_mean;
+    int N_HL_mean;
+    int Naccept_baseline_SD;
+    int N_baseline_SD;
+    int Naccept_HL_SD;
+    int N_HL_SD;
+    int Naccept_mass_mean;
+    int N_mass_mean;
+    int Naccept_width_mean;
+    int N_width_mean;
+    int Naccept_mass_SD;
+    int N_mass_SD;
+    int Naccept_width_SD;
+    int N_width_SD;
+    int Naccept_mass_mean_SD;
+    int N_mass_mean_SD;
+    int Naccept_width_mean_SD;
+    int N_width_mean_SD;
+    
 } PopulationProposal;
 
 /****This structure contains the priors on the patient level info: population parameters***/
@@ -142,6 +186,14 @@ typedef struct{
     double pv_clusterwidth;
     double pv_masscorr;
     double pv_massmatrix[2][2]; //This is proposal for the population pulse masses
+    
+    int Naccept_clustersize;
+    int N_clustersize;
+    int Naccept_clusterwidth;
+    int N_clusterwidth;
+    int Naccept_masscorr;
+    int N_masscorr;
+    
 } AssocProposals;
 
 /*The user defined values for the priors on the population level parameters*/
