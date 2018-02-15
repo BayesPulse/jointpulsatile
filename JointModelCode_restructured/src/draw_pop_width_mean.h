@@ -1,12 +1,12 @@
 //
-//  draw_pop_mass_mean.h
+//  draw_pop_width_mean.h
 //  
 //
-//  Created by Nichole Carlson on 2/6/18.
+//  Created by Nichole Carlson on 2/14/18.
 //
 
-#ifndef draw_pop_mass_mean_h
-#define draw_pop_mass_mean_h
+#ifndef draw_pop_width_mean_h
+#define draw_pop_widht_mean_h
 
 #include jt_deconvolution_main.h
 

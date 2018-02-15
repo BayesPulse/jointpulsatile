@@ -389,6 +389,13 @@ int main(int argc,char *argv[])
     pv_assoc->pv_cluster_width = pv_cluster_width;
     pv_assoc->pv_mass_corr = pv_mass_corr;
     
+    pv_assoc->Naccept_clustersize = 0;
+    pv_assoc->N_clustersize = 0;
+    pv_assoc->Naccept_clusterwidth = 0;
+    pv_assoc->N_clusterwidth = 0;
+    pv_assoc->Naccept_masscorr = 0;
+    pv_assoc->N_masscorr = 0;
+    
     //name the output file for association parameters
     assocparms->popassoc_filename = (char *)calloc(40,sizeof(char));
     strcpy(assocparms->popassoc_filename,fnameroot);
@@ -491,6 +498,47 @@ int main(int argc,char *argv[])
         patient->resp_pulse_pv->pv_tscalemass = pv_resptscalemass_input;
         patient->resp_pulse_pv->pv_tscalewidth = pv_resptscalewidth_input;
         
+        //set counters for acceptance probabilities to zero
+        patient->patient_pv->Naccept_baseline = 0;
+        patient->patient_pv->N_baseline = 0;
+        patient->patient_pv->Naccept_halflife = 0;
+        patient->patient_pv->N_halflife = 0;
+        patient->patient_pv->Naccept_mass_mean = 0;
+        patient->patient_pv->N_mass_mean = 0;
+        patient->patient_pv->Naccept_width_mean = 0;
+        patient->patient_pv->N_width_mean = 0;
+        
+        patient->resp_patient_pv->Naccept_baseline = 0;
+        patient->resp_patient_pv->N_baseline = 0;
+        patient->resp_patient_pv->Naccept_halflife = 0;
+        patient->resp_patient_pv->N_halflife = 0;
+        patient->resp_patient_pv->Naccept_mass_mean = 0;
+        patient->resp_patient_pv->N_mass_mean = 0;
+        patient->resp_patient_pv->Naccept_width_mean = 0;
+        patient->resp_patient_pv->N_width_mean = 0;
+        
+        patient->pulse_pv->Naccept_pulse_mass = 0;
+        patient->pulse_pv->N_pulse_mass = 0;
+        patient->pulse_pv->Naccept_pulse_width = 0;
+        patient->pulse_pv->N_pulse_width = 0;
+        patient->pulse_pv->Naccept_pulse_location = 0;
+        patient->pulse_pv->N_pulse_location = 0;
+        patient->pulse_pv->Naccept_tscalemass = 0;
+        patient->pulse_pv->N_tscalemass = 0;
+        patient->pulse_pv->Naccept_tscalewidth = 0;
+        patient->pulse_pv->N_tscalewidth = 0;
+        
+        patient->resp_pulse_pv->Naccept_pulse_mass = 0;
+        patient->resp_pulse_pv->N_pulse_mass = 0;
+        patient->resp_pulse_pv->Naccept_pulse_width = 0;
+        patient->resp_pulse_pv->N_pulse_width = 0;
+        patient->resp_pulse_pv->Naccept_pulse_location = 0;
+        patient->resp_pulse_pv->N_pulse_location = 0;
+        patient->resp_pulse_pv->Naccept_tscalemass = 0;
+        patient->resp_pulse_pv->N_tscalemass = 0;
+        patient->resp_pulse_pv->Naccept_tscalewidth = 0;
+        patient->resp_pulse_pv->N_tscalewidth = 0;
+        
         insert_subject(patient,patientlist);
     }
 
@@ -537,8 +585,48 @@ int main(int argc,char *argv[])
     pv_pop_response->pv_HL_mean = pvmean;
     pv_pop_response->pv_HL_SD = pvsd;
     
+    // initialize the acceptance probability counters for the population parameters and the response population parameters
+    pv_pop->Naccept_baseline_mean = 0;
+    pv_pop->N_baseline_mean = 0;
+    pv_pop->Naccept_HL_mean = 0;
+    pv_pop->N_HL_mean = 0;
+    pv_pop->Naccept_baseline_SD = 0;
+    pv_pop->N_baseline_SD = 0;
+    pv_pop->Naccept_HL_SD = 0;
+    pv_pop->N_HL_SD = 0;
+    pv_pop->Naccept_mass_mean = 0;
+    pv_pop->N_mass_mean = 0;
+    pv_pop->Naccept_width_mean = 0;
+    pv_pop->N_width_mean = 0;
+    pv_pop->Naccept_mass_SD = 0;
+    pv_pop->N_mass_SD = 0;
+    pv_pop->Naccept_width_SD = 0;
+    pv_pop->N_width_SD = 0;
+    pv_pop->Naccept_mass_mean_SD = 0;
+    pv_pop->N_mass_mean_SD = 0;
+    pv_pop->Naccept_width_mean_SD = 0;
+    pv_pop->N_width_mean_SD = 0;
     
- 
+    pv_pop_response->Naccept_baseline_mean = 0;
+    pv_pop_response->N_baseline_mean = 0;
+    pv_pop_response->Naccept_HL_mean = 0;
+    pv_pop_response->N_HL_mean = 0;
+    pv_pop_response->Naccept_baseline_SD = 0;
+    pv_pop_response->N_baseline_SD = 0;
+    pv_pop_response->Naccept_HL_SD = 0;
+    pv_pop_response->N_HL_SD = 0;
+    pv_pop_response->Naccept_mass_mean = 0;
+    pv_pop_response->N_mass_mean = 0;
+    pv_pop_response->Naccept_width_mean = 0;
+    pv_pop_response->N_width_mean = 0;
+    pv_pop_response->Naccept_mass_SD = 0;
+    pv_pop_response->N_mass_SD = 0;
+    pv_pop_response->Naccept_width_SD = 0;
+    pv_pop_response->N_width_SD = 0;
+    pv_pop_response->Naccept_mass_mean_SD = 0;
+    pv_pop_response->N_mass_mean_SD = 0;
+    pv_pop_response->Naccept_width_mean_SD = 0;
+    pv_pop_response->N_width_mean_SD = 0;
   
       fflush(stdout);
 

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <imsls.h>
 
 
 /*****This structure contains the information of each pulse********/
@@ -20,6 +21,8 @@ typedef struct node_tag{
 	//double lambda; /*for fsh pulse only, lambda, denomsum*/  /***NOT SURE WHAT THIS TERM IS FOR***/
 } PulseEstimates;
 
+//Proposal variances and MH acceptance probability components for pulse specific parameter.
+//These will go away with integration with pop model package.
 typedef struct {
     double pv_time;
     double pv_mass;
@@ -55,7 +58,8 @@ typedef struct {
     
 } PatientEstimates;
 
-/****This structure contains the patient level proposal variances and the acceptance probabilities***/
+//Proposal variances and MH acceptance probability components for patient specific parameter.
+//These will go away with integration with pop model package.
 typedef struct {
     double pv_baseline;
     double pv_halflife;
@@ -238,5 +242,6 @@ typedef struct{
     double corr_beta;   /*beta parameter in the beta prior on the correlation between the pulse masses*/
 } AssocPriors;
 
-
+//Function declaration
+void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *popprior_response,  PopulationEstimates *popparms, PopulationProposals *pv_pop, PopulationPopulationEstimates *popparms_response, PopulationProposals *pv_pop_resp, AssocPriors *assocprior, AssocEstimates *assocparms, AssocProposals *pv_assoc, int Nsubj, unsigned long *seed, int MCMCinter,int Nthin, int Nburnin);
 

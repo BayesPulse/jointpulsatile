@@ -1,16 +1,10 @@
 /*******************************************************************/
-/*************************draw_fe_prior_w_mean.c *****************************/
+/*************************draw_pop_width_mean.c*********************/
 /*******************************************************************/
 
-/**fix here***/
-#include "jt_deconvolution_main.h"
-#include "jt_birthdeath.h"
-#include "jt_mcmc.h"
+#include "draw_pop_width_mean.h"
 
-
-
-/*draw_fe_prior_w_mean*/
-void draw_fe_prior_w_mean(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper)
+void draw_pop_widht_mean(Patient *patientlist, PopulationPriors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper)
 {
 	/* declare variables */
 	int j;

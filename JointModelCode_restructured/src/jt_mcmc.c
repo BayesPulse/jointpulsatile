@@ -2,47 +2,30 @@
 /*************************jt_mcmc.c *****************************/
 /*******************************************************************/
 
-/**FIX HERE**/
-#include "jt_deconvolution_main.h"
-#include "jt_birthdeath.h"
 #include "jt_mcmc.h"
 
 extern double M;
 
 //Start of the function: Needs updating
 //void mcmc(Subject_type *sublist, Common_parms *parms_l, Common_parms *parms_f, double **ts_l, double **ts_f, int MCMCiter, int N,Priors *priors, unsigned long *seed, char *filel, char *file2, double propvar[], Hyper_priors *hyper)
-void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *popprior_response, PopulationEstimates *popparms, PopulationEstimates *popparms_response,int Nsubj,
+void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *popprior_response,  PopulationEstimates *popparms, PopulationProposals *pv_pop, PopulationPopulationEstimates *popparms_response, PopulationProposals *pv_pop_resp, AssocPriors *assocprior, AssocEstimates *assocparms, AssocProposals *pv_assoc, int Nsubj, unsigned long *seed, int MCMCinter,int Nthin, int Nburnin)
 {
-	int i, j, k, l, num_node, num_node2, NN = 50, NNN = 5000;
-    double vfepmv_l, **sigma_p, vfepwv_l, vrem_l, vrew_l, vfemv_l, vfepw_l, vnu, vrho, vfepw_f, vfewv_l;
-    double vfebv_l, vfehv_l, veta_l[2], veta_f[2], vfepmv_f, vfepwv_f, vrem_f, vrew_f, vfemv_f, vfewv_f;
-    double vfebv_f, vfehv_f, vtime_l, ssq_l, vtime_f, ssq_f, **pmd_var_l, **pmd_vch_l, **pmd_var_f, **pmd_vch_f, **pmean_var;
-	Node_type *new_node, *tdriver, *tresponse;
-	Subject_type *subject;
-	FILE *common_l, *common_f;
-	int cholesky_decomp(double **A, int num_col);
-	double *skernel(Node_type *, Node_type *, Common_parms *, int);
-	double phi(double, double, double);
-	double **cholesky_invert(int, double **);
-
-	Common_parms *tparms_l, *tparms_f;
-	Priors *tpriors;
-	Subject_type *tsubject, *tsublist, *ttsublist, *ttsubject;
-
+    int i;
+    
 //Run the MCMC for Niter iterations
 	for (i = 0; i < MCMCinter; i++) {
 
-		/* run the birth-death algorithm to select pulses */
-
+	
         //Why do I need iteration number assigned to variables
 //		parms_f->iter = i;
 //		parms_l->iter = i;
 
 
 //Draw population mean parameters for mean pulse mass and width: mua and muw
-
 		draw_pop_mass_mean(patientlist, popparms, popparms_response, popprior, popprior_response, poprior, popprior_response, pv_assoc, Nubj,seed);   //for trigger and response jointly
-        draw_pop_width_mean(sublist, priors, parms_f, seed, hyper);  //for trigger
+
+        /*Working on this loop here now*/
+        draw_pop_width_mean(sublist, priors, parms_f, seed, hyper);  //for trigger: This should be done with Pop Model function
 
 // Draw patient-to-patient SD in pulse mass and width means sma and smw  //check that drawing SD and not variance
 
