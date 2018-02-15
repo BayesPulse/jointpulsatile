@@ -33,7 +33,7 @@ TO BE FILLED IN
 TO BE FILLED IN
 **************************************************************************/
 
-void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, PopulationEstimate *popparms_response, PopulationPrior *popprior, PopulationProposal *pv_pop, PopulationPrior *popprior_response, PopulationProposal *pv_pop_response, AssocEstimates *assocparms, PopulationProposal *pv_assoc, int Nsubj, unsigned long *seed);
+void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, PopulationEstimate *popparms_response, PopulationPrior *popprior, PopulationProposal *pv_pop, PopulationPrior *popprior_response, PopulationProposal *pv_pop_response, AssocEstimates *assocparms, PopulationProposal *pv_assoc, int Nsubj, unsigned long *seed)
 {
 	/* declare variables */
 
@@ -99,7 +99,7 @@ void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, Popu
             sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[1][0] * (patient->patient_parms->mass_mean - proposalmeans[0]);
             sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[0][1] * (patient->patient_parms->mass_mean - proposalmeans[0]);
             sum_numerator += (patient->resp_patient_parms->mass_mean - proposalmeans[1]) * patient_mass_var_inv[1][1] * (patient->resp_patient_parms->mass_mean - proposalmeans[1]);
-            sum_norm_int_numerator += 1 - imsls_d_multivariate_normal_cdf(2, proposalmeans,patient_mass_var,0);
+            sum_norm_int_numerator += log(1 - imsls_d_multivariate_normal_cdf(2, proposalmeans,patient_mass_var,0));
         
             sum_denominator += (patient->patient_parms->mass_mean - popparms->mass_mean) * patient_mass_var_inv[0][0] * (patient->patient_parms->mass_mean - popparms->mass_mean);
             sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[1][0] * (patient->patient_parms->mass_mean - popparms->mass_mean);
@@ -107,7 +107,7 @@ void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, Popu
             sum_denominator += (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean) * patient_mass_var_inv[1][1] * (patient->resp_patient_parms->mass_mean - popparms_response->mass_mean);
             tempmean[0] = patient->patient_parms->mass_mean;
             tempmean[1] = patient->resp_patient_parms->mass_mean;
-            sum_norm_int_denominator += 1 - imsls_d_multivariate_normal_cdf(2, tempmean,patient_mass_var,0);
+            sum_norm_int_denominator += log(1 - imsls_d_multivariate_normal_cdf(2, tempmean,patient_mass_var,0));
             
             patient = patientlist->succ;
         } /*end of loop through pulses*/
@@ -150,7 +150,7 @@ void draw_pop_mass_mean(Patient *patientlist, PopulationEstimate *popparms, Popu
             popparms->mass_mean = proposalmeans[0];
             popparms_response->mass_mean = proposalmeans[1];
             pv_pop->Naccept_mass_mean++;
-            pv_pop->Naccept_mass_mean++;
+            pv_pop_response->Naccept_mass_mean++;
             
         }
     }

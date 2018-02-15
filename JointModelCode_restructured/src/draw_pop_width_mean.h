@@ -15,5 +15,6 @@ double rnorm(double, double, unsigned long *);
 double kiss(unsigned long *);
 int cholesky_decomp(double **, int);
 double **cholesky_invert(int, double **);
+double phi(double y, double mu, double s)
 
 #endif /* draw_pop_mass_mean_h */
