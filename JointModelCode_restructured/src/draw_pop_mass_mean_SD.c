@@ -2,21 +2,15 @@
 /*************************draw_fe_prior_a_var.c *****************************/
 /*******************************************************************/
 
-/***fixed here***/
-#include "jt_deconvolution_main.h"
-#include "jt_birthdeath.h"
-#include "jt_mcmc.h"
+#include "draw_pop_mass_mean_SD.h"
 
-
-void draw_fe_prior_a_var(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper) {
+void draw_pop_mass_mean_SD(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper) {
 	/*declare varibles */
 	int i, j, nsubj;
 	double diff[2], **sigma_a_w, **sigma_a_w_inv;
 	Subject_type *subject;
 	/*declare functions */
-	int cholesky_decomp(double **, int);
-	double **cholesky_invert(int, double **);
-	void rwishart(double **, double **, int, int, unsigned long *,int);
+	
 
 	/* allocate memory*/
 	sigma_a_w_inv = (double **)calloc(2, sizeof(double *));
