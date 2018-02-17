@@ -26,10 +26,11 @@ void mcmc(Patient *patientlist, PopulationPriors *popprior, PopulationPriors *po
 
         draw_pop_width_mean(patientlist, popparms, popprior, pv_pop, Nsubj, seed); //for trigger: This should be done with Pop Model function
 
-// Draw patient-to-patient SD in pulse mass and width means sma and smw  //check that drawing SD and not variance
-        /***start on this loop here***/
-		draw_pop_mass_mean_SD(sublist, priors, parms_f, seed, hyper);
-		draw_pop_width_mean_SD(sublist, priors, vfewv_l, vfewv_f, seed, hyper);
+// Draw patient-to-patient variance in pulse mass mean and SD of width
+        
+		draw_pop_mass_mean_var(sublist, priors, parms_f, seed, hyper);  //this is unique to joint model
+        
+        draw_pop_width_mean_SD(sublist, priors, vfewv_l, vfewv_f, seed, hyper); //for trigger: This should be done with Pop Model function
 
 // Draw population mean baseline and halflife; mub and muh*/
 

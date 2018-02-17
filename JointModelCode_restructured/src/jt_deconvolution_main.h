@@ -238,8 +238,8 @@ typedef struct{
     double variance_log_cluster_size; /*variance in prior on the cluster size*/
     double mean_log_cluster_width; /*mean on prior of cluster width (nu) in the cox process for the respose hormone intensity*/
     double variance_log_cluster_width; /*variance in prior on the cluster width*/
-    double corr_alpha;  /*alpha parameter in the beta prior on the correlation between the pulse masses*/
-    double corr_beta;   /*beta parameter in the beta prior on the correlation between the pulse masses*/
+    double var_popmeanmass_df;  /*df in the wishart prior on the mean pulse masses*/
+    double var_popmeanmass[2][2];   /*matrix in the prior on the wishart for the mean pulse masses*/
 } AssocPriors;
 
 //Function declaration

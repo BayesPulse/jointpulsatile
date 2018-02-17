@@ -1,10 +1,11 @@
 /*******************************************************************/
-/*************************draw_fe_prior_a_var.c *****************************/
+/*************************draw_pop_mass_mean_var.c *****************/
+//This is going to have to be changed to a MH algorithm.  The math needs to be worked out
 /*******************************************************************/
 
-#include "draw_pop_mass_mean_SD.h"
+#include "draw_pop_mass_mean_var.h"
 
-void draw_pop_mass_mean_SD(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper) {
+void draw_pop_mass_mean_var(Subject_type *sublist, Priors *priors, Common_parms *parms_f, unsigned long *seed, Hyper_priors *hyper) {
 	/*declare varibles */
 	int i, j, nsubj;
 	double diff[2], **sigma_a_w, **sigma_a_w_inv;

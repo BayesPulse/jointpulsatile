@@ -156,14 +156,14 @@ int main(int argc,char *argv[])
     
     double mean_cluster_input, var_cluster_input; //user inputs for mean and variance on the cluster size
     double mean_clusterwidth_input, var_clusterwidth_input; //user inputs for mean and variance on the cluster width
-    double mass_corr_alpha_input, mass_corr_beta_input, corr_prior_alpha, corr_prior_beta; //user inputs for beta prior on correlation of the patient level mean pulse masses
+    double var_popmeanmass_df, var_popmeanmass_input00, var_popmeanmass_input11, var_popmeanmass_corr_input; //user inputs for beta prior on correlation of the patient level mean pulse masses
     double svmean, svcorr, svptsd, svsd; //user inputs for starting values
     
     AssocPriors *assocprior;
     AssocEstimates *assocparms;
     AssocProposals *pv_assoc;
     
-    double sv_cluster_input, sv_width_input, sv_mass_corr_input; //user input starting value for association parameters
+    double sv_cluster_input, sv_width_input, sv_mass_corr_input, sv_popprior_mass_corr; //user input starting value for association parameters
     double pv_cluster_size, pv_cluster_width, pv_mass_corr; //user input starting value for proposal variances for association parameters
     
     PopulationEstimates *popparms;
@@ -311,14 +311,16 @@ int main(int argc,char *argv[])
     
     fscanf(finput,"%lf %lf\n",&mean_cluster_input, &var_cluster_input);
     fscanf(finput,"%lf %lf\n",&mean_clusterwidth_input, &var_clusterwidth_input);
-    fscanf(finput,"%lf %lf\n",&mass_corr_alpha_input, &mass_corr_beta_input);
+    fscanf(finput,"%lf %lf\n",&var_popmeanmass_df, &var_popmeanmass_input00, &var_popmeanmass_input11, &var_popmeanmass_corr_input);
     
     assocprior->mean_log_cluster_size = log(mean_cluster_input);
     assocprior->variance_log_cluster_size = log(var_cluster_input);
     assocprior->mean_log_cluster_width = log(mean_clusterwidth_input);
     assocprior->variance_log_cluster_width = log(var_clusterwidth_input);
-    assocprior->corr_alpha = mass_corr_alpha_input;
-    assocprior->corr_beta = mass_corr_beta_input;
+    assocprior->var_popmean_df = var_popmeanmass_df;
+    assocprior->var_popmeanmass[0][0] = var_popmeanmass_input00;
+    assocprior->var_popmeanmass[1][1] = var_popmeanmass_input11;
+    assocprior->var_popmeanmass[0][1] = assocprior->var_popmeanmass[1][0] = var_popmeanmass_corr_input * sqrt(var_popmeanmass_input00) * sqrt(var_popmeanmass_input11);
     
 /**Read in the starting values for population parameters**/
     
@@ -375,12 +377,13 @@ int main(int argc,char *argv[])
     
     assocparms = (AssocEstimates *)calloc(1,sizeof(AssocEstimates));
     
-    fscanf(finput,"%lf %lf %lf\n",&sv_cluster_input,&sv_width_input,&sv_mass_corr_input);
+    fscanf(finput,"%lf %lf %lf\n",&sv_cluster_input,&sv_width_input,&sv_mass_corr_input, &sv_popprior_mass_corr;
     assocparms->cluster_size = sv_cluster_input;
     assocparms->log_cluster_size = log(sv_cluster_input);
     assocparms->cluster_width = sv_width_input;
     assocparms->log_cluster_width = log(sv_width_input);
     assocparms->mass_corr = sv_mass_corr_input;
+    assocparms->popprior_mass_corr = sv_popprior_mass_corr;
     
     pv_assoc = (AssocProposals *)calloc(1,sizeof(AssocProposals));
     
